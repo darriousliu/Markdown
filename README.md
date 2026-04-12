@@ -327,6 +327,7 @@ document.diagnostics.forEach { diagnostic ->
 | Module | Description |
 |--------|-------------|
 | `:markdown-parser` | Core parsing engine — Markdown string → AST. Streaming, incremental, multi-flavour. |
+| `:markdown-ui` | Parser-only UI contracts — AST state, element themes, extension providers for custom rendering. |
 | `:markdown-renderer` | Rendering engine — AST → Compose UI. Theming, image loading, code highlighting. |
 | `:markdown-preview` | Interactive showcase — categorized demo of all supported features. |
 | `:composeApp` | Cross-platform demo app (Android/iOS/Desktop/Web). |
