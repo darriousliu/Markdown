@@ -327,6 +327,7 @@ document.diagnostics.forEach { diagnostic ->
 | 模块 | 描述 |
 |------|------|
 | `:markdown-parser` | 核心解析引擎 — Markdown 字符串 → AST。支持流式、增量、多 Flavour。 |
+| `:markdown-ui` | 仅 Parser 的 UI 协议模块 — AST 状态、元素主题、扩展 Provider，适合完全自定义渲染。 |
 | `:markdown-renderer` | 渲染引擎 — AST → Compose UI。主题、图片加载、代码高亮。 |
 | `:markdown-preview` | 交互式展示 — 分类浏览所有支持功能的演示。 |
 | `:composeApp` | 跨平台 Demo 应用（Android/iOS/Desktop/Web）。 |
