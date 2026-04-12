@@ -33,6 +33,7 @@ plugins {
 }
 
 include(":markdown-parser")
+include(":markdown-ui")
 include(":markdown-renderer")
 include(":markdown-preview")
 include(":composeApp")
