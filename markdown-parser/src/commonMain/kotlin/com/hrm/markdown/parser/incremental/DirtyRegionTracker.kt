@@ -61,7 +61,16 @@ class DirtyRegionTracker {
         // 向后扩展到块边界
         val expandedEnd = expandToBlockBoundaryForward(editEndLineNew, newSource)
 
-        return LineRange(expandedStart, expandedEnd)
+        val linesDelta = newSource.lineCount - oldSource.lineCount
+        val reusableSuffixStart = findReusableSuffixStart(
+            oldBlocks = oldBlocks,
+            oldEditEndLine = editEndLineOld,
+            linesDelta = linesDelta,
+            newSource = newSource
+        )
+        val dirtyEnd = reusableSuffixStart?.let { minOf(expandedEnd, it) } ?: expandedEnd
+
+        return LineRange(expandedStart, dirtyEnd.coerceAtLeast(expandedStart))
     }
 
     /**
@@ -127,5 +136,31 @@ class DirtyRegionTracker {
             l++
         }
         return source.lineCount
+    }
+
+    /**
+     * 尝试找到编辑后第一个可直接复用的后缀块起点。
+     *
+     * 这一步可以收紧保守的脏区结束位置，让“位置平移但内容未变”的后缀块
+     * 保持对象复用，而不是被一并重新解析。
+     */
+    private fun findReusableSuffixStart(
+        oldBlocks: List<Node>,
+        oldEditEndLine: Int,
+        linesDelta: Int,
+        newSource: SourceText
+    ): Int? {
+        return oldBlocks
+            .asSequence()
+            .filter { it.lineRange.startLine >= oldEditEndLine }
+            .mapNotNull { block ->
+                val shiftedRange = block.lineRange.shift(linesDelta)
+                if (shiftedRange.startLine < 0 || shiftedRange.endLine > newSource.lineCount) {
+                    return@mapNotNull null
+                }
+                val newHash = newSource.contentHash(shiftedRange)
+                if (newHash == block.contentHash) shiftedRange.startLine else null
+            }
+            .firstOrNull()
     }
 }
