@@ -339,8 +339,7 @@ private fun InnerMarkdown(
                 Column(
                     modifier = modifier
                         .then(theme.modifiers.document)
-                        .then(if (enableScroll) Modifier.verticalScroll(scrollState) else Modifier)
-                        .graphicsLayer { },
+                        .then(if (enableScroll) Modifier.verticalScroll(scrollState) else Modifier),
                     verticalArrangement = Arrangement.spacedBy(theme.document.blockSpacing),
                 ) {
                     for (node in renderBlocks) {
