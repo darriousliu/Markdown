@@ -10,7 +10,7 @@ plugins {
 kotlin {
     jvmToolchain(21)
 
-    androidLibrary {
+    android {
         namespace = "com.hrm.markdown.preview"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
@@ -51,6 +51,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.markdownRenderer)
+            api(projects.markdownUi)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
