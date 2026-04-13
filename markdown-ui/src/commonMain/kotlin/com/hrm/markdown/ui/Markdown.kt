@@ -10,37 +10,19 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.Stable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.hrm.markdown.parser.ast.BlankLine
 import com.hrm.markdown.parser.ast.Document
-import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.ui.block.BlockRenderer
 import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
+import com.hrm.markdown.ui.state.IncrementalBlockState
 import com.hrm.markdown.ui.state.rememberMarkdownDocument
 import com.hrm.markdown.ui.theme.MarkdownElementModifiers
 import com.hrm.markdown.ui.theme.MarkdownTheme
-
-/**
- * 稳定节点包装器：让 Compose 能够对未变化的块跳过重组。
- *
- * 问题根源：[Node] 位于无 Compose 依赖的 parser 模块，无法标注 [@Stable]，
- * 导致 Compose 编译器保守地认为每次父级重组时都必须重组 [BlockRenderer]，
- * 即便 [Node] 引用完全没有变化。
- *
- * 解决方案：在 UI 层引入此 [@Stable] 包装器。
- * - [BlockColumn] 为每个 [Node] 维护一个 [NodeStableWrapper] 缓存（wrapperCache）。
- * - parser 复用的节点（同一对象引用）会命中缓存，拿到相同的 [NodeStableWrapper] 实例。
- * - [BlockNode] 接受 [NodeStableWrapper]：Compose 看到 [@Stable] + 相同引用 → 直接跳过，
- *   不调用 [BlockRenderer]，也不触发任何下游 rememberInlineContent / collectInlineSlots。
- * - 仅当 parser 产生新 [Node] 对象（内容确实改变）时，缓存 miss → 新 [NodeStableWrapper] →
- *   Compose 重组 [BlockNode] → 仅该块重新渲染。
- */
-@Stable
-internal class NodeStableWrapper(val node: Node)
 
 /**
  * markdown-ui 顶层 Composable 入口。
@@ -128,6 +110,21 @@ fun MarkdownContent(
     enableSelection: Boolean = true,
     enableHeadingNumbering: Boolean = false,
 ) {
+    // ── 增量块状态 ──────────────────────────────────────────────────────────
+    // IncrementalBlockState 持有两个 Snapshot 集合：
+    //   nodeMap:  stableKey → Node（快照映射，每个 BlockCell 读取自己的条目）
+    //   keyOrder: stableKey 有序列表（快照列表，BlockColumn 读取它）
+    //
+    // SideEffect 在每次 MarkdownContent 重组（= document 有新版本）后运行，
+    // 对新旧节点列表做 O(N) 引用比较，只把真正变化的条目写入快照状态：
+    //   - parser 复用的节点（同一引用）→ 不写入 → 对应 BlockCell 不重组
+    //   - parser 产生新对象（内容变化）→ 写入  → 仅该 BlockCell 重组
+    //   - 新增节点              → 插入  → BlockColumn 重组以追加新块
+    val blockState = remember { IncrementalBlockState() }
+    SideEffect {
+        blockState.update(document.children.filter { it !is BlankLine })
+    }
+
     CompositionLocalProvider(
         LocalMarkdownTheme provides theme,
         LocalMarkdownModifiers provides elementModifiers,
@@ -139,7 +136,7 @@ fun MarkdownContent(
     ) {
         val content: @Composable () -> Unit = {
             BlockColumn(
-                document = document,
+                blockState = blockState,
                 modifier = modifier
                     .let { if (scrollState != null) it.verticalScroll(scrollState) else it }
                     .then(elementModifiers.document),
@@ -155,47 +152,56 @@ fun MarkdownContent(
     }
 }
 
+/**
+ * 顶层块列表容器。
+ *
+ * 接受 [IncrementalBlockState] 而非 [Document]，使 Compose 能够在
+ * [MarkdownContent] 因 document 参数变化而重组时跳过本函数：
+ * [IncrementalBlockState] 是 [@Stable] 且持久存在于 remember 中，
+ * 只有当 [IncrementalBlockState.keyOrder]（快照列表）真正发生增删时
+ * 本函数才被触发重组。
+ */
 @Composable
 private fun BlockColumn(
-    document: Document,
+    blockState: IncrementalBlockState,
     modifier: Modifier,
     blockSpacing: androidx.compose.ui.unit.Dp,
 ) {
-    // wrapperCache: Node 引用 → NodeStableWrapper 实例的身份映射。
-    // 同一 Node 对象始终返回同一 NodeStableWrapper，
-    // 确保 Compose 在 BlockNode(@Stable 参数不变) 时能够跳过重组。
-    val wrapperCache = remember { HashMap<Node, NodeStableWrapper>() }
-
-    val stableNodes = remember(document) {
-        val incoming = document.children.filter { it !is BlankLine }
-        // 清理不再出现的旧节点，防止缓存无限增长
-        val incomingSet = incoming.toHashSet()
-        val stale = wrapperCache.keys.filter { it !in incomingSet }
-        stale.forEach { wrapperCache.remove(it) }
-        // 复用旧 wrapper（node 对象相同）或为新节点创建 wrapper
-        incoming.map { node -> wrapperCache.getOrPut(node) { NodeStableWrapper(node) } }
-    }
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(blockSpacing),
     ) {
-        for (wrapper in stableNodes) {
-            key(wrapper.node::class, wrapper.node.stableKey) {
-                BlockNode(wrapper)
+        for (sk in blockState.keyOrder) {
+            key(sk) {
+                BlockCell(stableKey = sk, blockState = blockState)
             }
         }
     }
 }
 
 /**
- * 单个块级节点的稳定渲染入口。
+ * 单块渲染单元——增量重组的最小粒度。
  *
- * 接受 [@Stable] 的 [NodeStableWrapper]，使 Compose 在包装器引用不变时
- * 能够完全跳过此 composable（包括其内部的所有 rememberInlineContent 调用），
- * 实现渲染层的增量重组：只有 parser 实际产生新节点的块才会重新渲染。
+ * ## 为什么这样设计？
+ *
+ * Compose 的跳过（skip）机制要求所有参数均为稳定类型且值不变。
+ * 直接把 [com.hrm.markdown.parser.ast.Node] 作为参数行不通：
+ *   - [Node] 位于无 Compose 依赖的 parser 模块，无法标注 [@Stable]；
+ *   - 即便用 [@Stable] 包装，Compose 编译器对 `for-loop` 捕获变量
+ *     仍会保守地设置 `$changed` 位，实际并不跳过。
+ *
+ * 正确做法：让 [BlockCell] 只接受纯稳定参数（[Int] + [@Stable] 引用），
+ * 在函数体内部通过快照状态读取节点。读取 `blockState.nodeMap[stableKey]`
+ * 会向 Compose 注册该条目的观察；当该条目变化（parser 产生新节点）时，
+ * 仅此 [BlockCell] 被独立调度重组，其他块保持静止。
+ *
+ * 当 [BlockColumn] 因 [IncrementalBlockState.keyOrder] 增删而重组时，
+ * 对已有的 [BlockCell] 调用会命中跳过检查：
+ *   - `stableKey: Int`    → 原始类型，值相等即跳过
+ *   - `blockState: @Stable` → 同一 `remember` 实例，引用不变即跳过
  */
 @Composable
-private fun BlockNode(wrapper: NodeStableWrapper) {
-    BlockRenderer(wrapper.node)
+private fun BlockCell(stableKey: Int, blockState: IncrementalBlockState) {
+    val node = blockState.nodeMap[stableKey] ?: return
+    BlockRenderer(node)
 }
