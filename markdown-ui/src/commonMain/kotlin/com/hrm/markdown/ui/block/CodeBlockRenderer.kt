@@ -1,64 +1,94 @@
 package com.hrm.markdown.ui.block
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import com.hrm.markdown.parser.ast.FencedCodeBlock
-import com.hrm.markdown.parser.ast.IndentedCodeBlock
+import com.hrm.codehigh.renderer.CodeBlock
+import com.hrm.codehigh.theme.LocalCodeTheme
+import com.hrm.markdown.ui.LocalCodeHighlightTheme
+import com.hrm.markdown.ui.LocalIsStreaming
 import com.hrm.markdown.ui.LocalMarkdownTheme
 
 /**
- * 围栏代码块渲染器（``` 或 ~~~）。
+ * 围栏代码块渲染器 (``` 或 ~~~)
  *
- * markdown-ui 不绑定任何语法高亮库，仅以等宽字体渲染原始文本。
- * 若需要语法高亮，使用方可在 [com.hrm.markdown.ui.extension.MarkdownExtensionProvider]
- * 的 `Diagram` / 自定义容器中结合外部库（如 codehigh）接管渲染。
+ * 支持通过 info-string 的 `{...}` 属性语法控制：
+ * - **title**: 标题栏，如 `{title="main.kt"}`
+ * - **linenos / lineNumbers**: 行号显示
+ * - **highlight / hl_lines**: 高亮指定行，如 `{highlight="2,5-7"}`
  */
 @Composable
-internal fun FencedCodeBlockRenderer(node: FencedCodeBlock, modifier: Modifier = Modifier) {
-    CodeBlockContent(
-        text = node.literal,
-        title = node.info.takeIf { it.isNotBlank() },
+internal fun FencedCodeBlockRenderer(
+    text: String,
+    language: String,
+    title: String?,
+    showLineNumbers: Boolean,
+    startLine: Int,
+    highlightedLines: Set<Int>,
+    modifier: Modifier = Modifier,
+) {
+    CodeBlockText(
+        text = text.ifEmpty { " " },
+        language = language,
+        title = title,
+        showLineNumbers = showLineNumbers,
+        startLine = startLine,
+        highlightedLines = highlightedLines,
         modifier = modifier,
     )
 }
 
 /**
- * 缩进代码块渲染器（4 空格缩进）。
+ * 缩进代码块渲染器
  */
 @Composable
-internal fun IndentedCodeBlockRenderer(node: IndentedCodeBlock, modifier: Modifier = Modifier) {
-    CodeBlockContent(text = node.literal, title = null, modifier = modifier)
+internal fun IndentedCodeBlockRenderer(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    CodeBlockText(
+        text = text.ifEmpty { " " },
+        language = "",
+        title = null,
+        showLineNumbers = true,
+        startLine = 1,
+        highlightedLines = emptySet(),
+        modifier = modifier,
+    )
 }
 
 @Composable
-private fun CodeBlockContent(text: String, title: String?, modifier: Modifier) {
+private fun CodeBlockText(
+    text: String,
+    language: String,
+    title: String?,
+    showLineNumbers: Boolean,
+    startLine: Int,
+    highlightedLines: Set<Int>,
+    modifier: Modifier = Modifier,
+) {
     val theme = LocalMarkdownTheme.current
-    val style = theme.codeBlock
+    val codeTheme = LocalCodeHighlightTheme.current ?: LocalCodeTheme.current
+    val isStreaming = LocalIsStreaming.current
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(style.cornerRadius))
-            .background(style.background),
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(theme.codeBlockCornerRadius))
     ) {
-        if (!title.isNullOrEmpty()) {
-            BasicText(
-                text = title,
-                modifier = Modifier
-                    .background(style.titleBackground)
-                    .padding(horizontal = style.padding, vertical = style.padding / 2),
-                style = style.titleTextStyle,
-            )
-        }
-        BasicText(
-            text = text.trimEnd('\n').ifEmpty { " " },
-            modifier = Modifier.padding(style.padding),
-            style = style.textStyle,
+        CodeBlock(
+            code = text,
+            language = language,
+            title = title.orEmpty(),
+            modifier = Modifier.fillMaxWidth(),
+            isStreaming = isStreaming,
+            theme = codeTheme,
+            showLineNumbers = showLineNumbers,
+            startLine = startLine,
+            highlightedLines = highlightedLines,
         )
     }
 }

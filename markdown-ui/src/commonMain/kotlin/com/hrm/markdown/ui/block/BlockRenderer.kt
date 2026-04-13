@@ -2,120 +2,189 @@ package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import com.hrm.markdown.parser.ast.AbbreviationDefinition
-import com.hrm.markdown.parser.ast.Admonition
-import com.hrm.markdown.parser.ast.BibliographyDefinition
-import com.hrm.markdown.parser.ast.BlankLine
-import com.hrm.markdown.parser.ast.BlockQuote
-import com.hrm.markdown.parser.ast.ColumnsLayout
-import com.hrm.markdown.parser.ast.ContainerNode
-import com.hrm.markdown.parser.ast.CustomContainer
-import com.hrm.markdown.parser.ast.DefinitionList
-import com.hrm.markdown.parser.ast.DiagramBlock
-import com.hrm.markdown.parser.ast.FencedCodeBlock
-import com.hrm.markdown.parser.ast.Figure
-import com.hrm.markdown.parser.ast.FootnoteDefinition
-import com.hrm.markdown.parser.ast.FrontMatter
-import com.hrm.markdown.parser.ast.Heading
-import com.hrm.markdown.parser.ast.HtmlBlock
-import com.hrm.markdown.parser.ast.IndentedCodeBlock
-import com.hrm.markdown.parser.ast.LinkReferenceDefinition
-import com.hrm.markdown.parser.ast.ListBlock
-import com.hrm.markdown.parser.ast.MathBlock
-import com.hrm.markdown.parser.ast.Node
-import com.hrm.markdown.parser.ast.PageBreak
-import com.hrm.markdown.parser.ast.Paragraph
-import com.hrm.markdown.parser.ast.SetextHeading
-import com.hrm.markdown.parser.ast.ShortcodeBlock
-import com.hrm.markdown.parser.ast.TabBlock
-import com.hrm.markdown.parser.ast.Table
-import com.hrm.markdown.parser.ast.ThematicBreak
-import com.hrm.markdown.parser.ast.TocPlaceholder
-import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.LocalMarkdownModifiers
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.unit.dp
+import com.hrm.markdown.parser.ast.*
 import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.LocalRendererDocument
+
+private fun List<IntRange>.flattenLineNumbers(): Set<Int> = buildSet {
+    for (range in this@flattenLineNumbers) {
+        addAll(range)
+    }
+}
 
 /**
  * 块级节点分发器。
- *
- * 每个 case 只负责把节点交给对应的 block renderer，并把 [LocalMarkdownModifiers]
- * 中对应元素的外部 Modifier 透传给它。
- * 内部不会追加任何 fillMaxWidth / padding 等强制布局修饰，全部由调用方通过
- * [com.hrm.markdown.ui.theme.MarkdownElementModifiers] 注入。
+ * 根据节点类型分发到对应的块级渲染器。
  */
 @Composable
-fun BlockRenderer(node: Node) {
-    val modifiers = LocalMarkdownModifiers.current
-    val extensions = LocalMarkdownExtensionProvider.current
-    val theme = LocalMarkdownTheme.current
-
+internal fun BlockRenderer(
+    node: Node,
+    renderRevision: String = "",
+    modifier: Modifier = Modifier,
+) {
     when (node) {
-        is Heading -> HeadingRenderer(node, modifiers.heading)
-        is SetextHeading -> SetextHeadingRenderer(node, modifiers.heading)
-        is Paragraph -> ParagraphRenderer(node, modifiers.paragraph)
-        is ThematicBreak -> ThematicBreakRenderer(modifiers.thematicBreak)
-        is FencedCodeBlock -> FencedCodeBlockRenderer(node, modifiers.codeBlock)
-        is IndentedCodeBlock -> IndentedCodeBlockRenderer(node, modifiers.codeBlock)
-        is BlockQuote -> BlockQuoteRenderer(node, modifiers.blockQuote)
-        is ListBlock -> ListBlockRenderer(node, modifiers.list)
-        is Table -> TableRenderer(node, modifiers.table)
-        is HtmlBlock -> HtmlBlockRenderer(node, modifiers.htmlBlock)
-        is Admonition -> AdmonitionRenderer(node, modifiers.admonition)
-        is DefinitionList -> DefinitionListRenderer(node, modifiers.definitionList)
-        is FootnoteDefinition -> FootnoteDefinitionRenderer(node, modifiers.footnoteDefinition)
-        is PageBreak -> ThematicBreakRenderer(modifiers.thematicBreak)
-        is Figure -> extensions.Figure(node, theme.figure, modifiers.figure)
-        is MathBlock -> extensions.MathBlock(node, theme.math, modifiers.math)
-        is DiagramBlock -> extensions.Diagram(node, theme.codeBlock, modifiers.diagram)
-        is CustomContainer -> extensions.CustomContainer(
-            node = node,
-            theme = theme,
-            modifier = modifiers.customContainer,
-            renderContent = { MarkdownBlockChildren(node) },
-        )
-        is ShortcodeBlock -> extensions.ShortcodeBlock(
-            node = node,
-            theme = theme,
-            modifier = modifiers.shortcode,
-            renderContent = { MarkdownBlockChildren(node) },
-        )
-        is TabBlock -> extensions.TabBlock(node, theme, modifiers.tabBlock)
-        is ColumnsLayout -> ColumnsLayoutRenderer(node, modifiers.columns)
-        is BibliographyDefinition -> BibliographyDefinitionRenderer(node, modifiers.footnoteDefinition)
-        is TocPlaceholder -> TocPlaceholderRenderer(node)
-        is FrontMatter, is BlankLine, is LinkReferenceDefinition, is AbbreviationDefinition -> Unit
+        is Heading -> HeadingRenderer(node, modifier)
+        is SetextHeading -> SetextHeadingRenderer(node, modifier)
+        is Paragraph -> ParagraphRenderer(node, modifier)
+        is ThematicBreak -> ThematicBreakRenderer(modifier)
+        is FencedCodeBlock -> key(renderRevision) {
+            FencedCodeBlockRenderer(
+                text = node.literal,
+                language = node.language,
+                title = node.attributes.pairs["title"],
+                showLineNumbers = node.showLineNumbers,
+                startLine = node.startLineNumber,
+                highlightedLines = node.highlightLines.flattenLineNumbers(),
+                modifier = modifier,
+            )
+        }
+        is IndentedCodeBlock -> key(renderRevision) {
+            IndentedCodeBlockRenderer(
+                text = node.literal,
+                modifier = modifier,
+            )
+        }
+        is BlockQuote -> BlockQuoteRenderer(node, modifier)
+        is ListBlock -> ListBlockRenderer(node, modifier)
+        is HtmlBlock -> HtmlBlockRenderer(node, modifier)
+        is Table -> TableRenderer(node, modifier)
+        is MathBlock -> MathBlockRenderer(node, modifier)
+        is Admonition -> AdmonitionRenderer(node, modifier)
+        is CustomContainer -> CustomContainerRenderer(node, modifier)
+        is DiagramBlock -> DiagramBlockRenderer(node, modifier)
+        is ColumnsLayout -> ColumnsLayoutRenderer(node, modifier)
+        is DefinitionList -> DefinitionListRenderer(node, modifier)
+        is FootnoteDefinition -> FootnoteDefinitionRenderer(node, modifier)
+        is TocPlaceholder -> TocPlaceholderRenderer(node, modifier)
+        is PageBreak -> PageBreakRenderer(modifier)
+        is ShortcodeBlock -> ShortcodeBlockRenderer(node, modifier)
+        is TabBlock -> TabBlockRenderer(node, modifier)
+        is BibliographyDefinition -> BibliographyDefinitionRenderer(node, modifier)
+        is Figure -> FigureRenderer(node, modifier)
+        is FrontMatter -> { /* FrontMatter 通常不渲染 */ }
+        is LinkReferenceDefinition -> { /* 引用定义不直接渲染 */ }
+        is AbbreviationDefinition -> { /* 缩写定义不直接渲染 */ }
+        is BlankLine -> { /* 空行不渲染 */ }
         else -> {
-            // 未知块级节点：退化为容器遍历，最大化兼容性。
+            // 未知块级节点，尝试渲染子节点
             if (node is ContainerNode) {
-                for (child in node.children) BlockRenderer(child)
+                for (child in node.children) {
+                    BlockRenderer(child)
+                }
             }
         }
     }
 }
 
+internal fun blockRenderRevision(node: Node): String = when (node) {
+    is FencedCodeBlock -> "${node.lineRange.endLine}:${node.literal.length}"
+    is IndentedCodeBlock -> "${node.lineRange.endLine}:${node.literal.length}"
+    else -> "${node.lineRange.endLine}"
+}
+
 /**
- * 渲染一个 [ContainerNode] 内部的块级子节点序列，使用 theme 的 blockSpacing。
+ * TOC 占位符渲染器：渲染自动生成的目录。
  *
- * 这是 BlockQuote、ListItem、CustomContainer 等容器节点内部复用的基础构件。
+ * 支持高级配置：
+ * - `minDepth`/`maxDepth`：过滤标题层级范围
+ * - `excludeIds`：排除指定 ID 的标题
+ * - `order`：排序方式（asc/desc）
  */
 @Composable
-fun MarkdownBlockChildren(
-    parent: ContainerNode,
+internal fun TocPlaceholderRenderer(
+    node: TocPlaceholder,
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(theme.document.blockSpacing),
-    ) {
-        for (child in parent.children) {
-            if (child is BlankLine) continue
-            key(child::class, child.stableKey) {
-                BlockRenderer(child)
-            }
+    val document = LocalRendererDocument.current
+
+    // 收集所有标题
+    var headings = collectHeadings(document)
+    if (headings.isEmpty()) return
+
+    // 按深度范围过滤
+    headings = headings.filter { it.level in node.minDepth..node.maxDepth }
+
+    // 按排除 ID 过滤
+    if (node.excludeIds.isNotEmpty()) {
+        headings = headings.filter { heading ->
+            heading.id == null || heading.id !in node.excludeIds
         }
     }
+
+    // 按排序方式排序
+    if (node.order == "desc") {
+        headings = headings.reversed()
+    }
+
+    if (headings.isEmpty()) return
+
+    Column(
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        BasicText(
+            text = "Table of Contents",
+            style = theme.headingStyles.getOrElse(2) { theme.bodyStyle },
+            modifier = Modifier.padding(bottom = 4.dp),
+        )
+        for ((text, level, _) in headings) {
+            val adjustedLevel = (level - node.minDepth).coerceAtLeast(0)
+            BasicText(
+                text = "${"  ".repeat(adjustedLevel)}• $text",
+                style = theme.bodyStyle.copy(
+                    color = theme.linkColor,
+                    fontStyle = FontStyle.Normal,
+                ),
+                modifier = Modifier.padding(start = adjustedLevel.dp * 12),
+            )
+        }
+    }
+}
+
+private data class HeadingInfo(val text: String, val level: Int, val id: String?)
+
+private fun collectHeadings(document: Document): List<HeadingInfo> {
+    val result = mutableListOf<HeadingInfo>()
+    for (child in document.children) {
+        collectHeadingsRecursive(child, result)
+    }
+    return result
+}
+
+private fun collectHeadingsRecursive(node: Node, result: MutableList<HeadingInfo>) {
+    when (node) {
+        is Heading -> {
+            val text = node.children.joinToString("") { extractText(it) }
+            result.add(HeadingInfo(text, node.level, node.id))
+        }
+        is SetextHeading -> {
+            val text = node.children.joinToString("") { extractText(it) }
+            result.add(HeadingInfo(text, node.level, node.id))
+        }
+        is ContainerNode -> {
+            for (child in node.children) {
+                collectHeadingsRecursive(child, result)
+            }
+        }
+        else -> {}
+    }
+}
+
+private fun extractText(node: Node): String = when (node) {
+    is com.hrm.markdown.parser.ast.Text -> node.literal
+    is InlineCode -> node.literal
+    is EscapedChar -> node.literal
+    is HtmlEntity -> node.resolved.ifEmpty { node.literal }
+    is Emoji -> node.literal
+    is ContainerNode -> node.children.joinToString("") { extractText(it) }
+    else -> ""
 }

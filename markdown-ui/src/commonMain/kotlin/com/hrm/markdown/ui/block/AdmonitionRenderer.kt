@@ -3,6 +3,7 @@ package com.hrm.markdown.ui.block
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -11,41 +12,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.Admonition
 import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.MarkdownBlockChildren
 
 /**
- * Admonition 渲染器（`> [!NOTE]`、`> [!WARNING]` 等）。
- *
- * 不依赖 Material3，使用 [Modifier.drawBehind] 绘制左侧色条。
+ * Admonition 渲染器 (> [!NOTE], > [!WARNING] 等)。
  */
 @Composable
-internal fun AdmonitionRenderer(node: Admonition, modifier: Modifier = Modifier) {
+internal fun AdmonitionRenderer(
+    node: Admonition,
+    modifier: Modifier = Modifier,
+) {
     val theme = LocalMarkdownTheme.current
-    val styleSet = theme.admonition
-    val style = styleSet.resolve(node.type)
+    val style = theme.admonitionStyles[node.type.uppercase()]
+        ?: theme.admonitionStyles["NOTE"]
+        ?: return
 
     Column(
         modifier = modifier
+            .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(style.backgroundColor)
             .drawBehind {
-                val stroke = styleSet.borderWidth.toPx()
                 drawLine(
                     color = style.borderColor,
-                    start = Offset(stroke / 2, 0f),
-                    end = Offset(stroke / 2, size.height),
-                    strokeWidth = stroke,
+                    start = Offset(0f, 0f),
+                    end = Offset(0f, size.height),
+                    strokeWidth = 4.dp.toPx(),
                 )
             }
-            .padding(
-                start = styleSet.padding + styleSet.borderWidth,
-                top = styleSet.padding,
-                end = styleSet.padding,
-                bottom = styleSet.padding,
-            ),
+            .padding(start = 16.dp, top = 12.dp, end = 12.dp, bottom = 12.dp),
     ) {
+        // 标题行
         Row {
             BasicText(
                 text = style.iconText,
@@ -53,9 +54,14 @@ internal fun AdmonitionRenderer(node: Admonition, modifier: Modifier = Modifier)
             )
             BasicText(
                 text = node.title.ifEmpty { node.type.uppercase() },
-                style = styleSet.titleTextStyle.copy(color = style.titleColor),
+                style = theme.bodyStyle.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = style.titleColor,
+                ),
             )
         }
+
+        // 内容
         if (node.children.isNotEmpty()) {
             MarkdownBlockChildren(
                 parent = node,
