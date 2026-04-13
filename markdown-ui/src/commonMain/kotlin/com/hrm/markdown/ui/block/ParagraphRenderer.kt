@@ -1,24 +1,19 @@
 package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.rememberTextMeasurer
-import com.hrm.codehigh.theme.LocalCodeTheme
 import com.hrm.markdown.parser.ast.Image
 import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.parser.ast.Paragraph
 import com.hrm.markdown.parser.ast.Text
-import com.hrm.markdown.ui.DefaultMarkdownImage
-import com.hrm.markdown.ui.LocalCodeHighlightTheme
 import com.hrm.markdown.ui.LocalImageRenderer
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.MarkdownImageData
-import com.hrm.latex.renderer.measure.rememberLatexMeasurer
 import com.hrm.markdown.ui.inline.buildInlineAnnotatedString
 import com.hrm.markdown.ui.inline.rememberInlineContent
 
@@ -60,7 +55,7 @@ private fun SimpleParagraphRenderer(
 
     BasicText(
         text = annotated,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         style = theme.bodyStyle,
         inlineContent = inlineContents,
     )
@@ -89,26 +84,27 @@ private fun MixedParagraphRenderer(
     val theme = LocalMarkdownTheme.current
     val onLinkClick = LocalOnLinkClick.current
     val customRenderer = LocalImageRenderer.current
-    val latexMeasurer = rememberLatexMeasurer()
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val textMeasurer = rememberTextMeasurer()
-    val codeTheme = LocalCodeHighlightTheme.current ?: LocalCodeTheme.current
+    val extensionProvider = LocalMarkdownExtensionProvider.current
 
     // 将段落子节点拆分为文本段和图片段
     val segments = remember(node) { splitParagraphSegments(node.children) }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier) {
         for (segment in segments) {
             when (segment) {
                 is ParagraphSegment.TextRun -> {
                     val inlineContents = mutableMapOf<String, androidx.compose.foundation.text.InlineTextContent>()
                     val annotated = buildInlineAnnotatedString(
-                        segment.nodes, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, codeTheme
+                        segment.nodes,
+                        theme,
+                        emptyMap(),
+                        inlineContents,
+                        onLinkClick,
                     )
                     if (annotated.isNotEmpty()) {
                         BasicText(
                             text = annotated,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier,
                             style = theme.bodyStyle,
                             inlineContent = inlineContents,
                         )
@@ -130,7 +126,12 @@ private fun MixedParagraphRenderer(
                     if (customRenderer != null) {
                         customRenderer(imageData, Modifier)
                     } else {
-                        DefaultMarkdownImage(data = imageData)
+                        extensionProvider.BlockImage(
+                            node = img,
+                            altText = altText,
+                            style = theme.image,
+                            modifier = theme.modifiers.image,
+                        )
                     }
                 }
             }

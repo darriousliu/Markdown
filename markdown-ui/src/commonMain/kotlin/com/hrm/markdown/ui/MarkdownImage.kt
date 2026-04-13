@@ -1,20 +1,17 @@
 package com.hrm.markdown.ui
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
 
 /**
  * 图片渲染所需的数据模型。
@@ -85,10 +82,8 @@ internal val LocalImageRenderer = compositionLocalOf<MarkdownImageRenderer?> { n
 /**
  * 默认的图片渲染组件。
  *
- * 使用 Coil3 的 [AsyncImage] 从网络或本地加载图片。
- * 加载过程中显示 loading 指示器，加载失败时显示替代文本。
- *
- * 外部使用者也可通过 [Markdown] 的 `imageContent` 参数传入自定义图片加载实现来覆盖此行为。
+ * 默认只提供文本降级展示，避免内置依赖具体图片加载库。
+ * 外部使用者可通过 [Markdown] 的 `imageContent` 参数接入 Coil、Kamel 等实现。
  */
 @Composable
 internal fun DefaultMarkdownImage(
@@ -103,25 +98,9 @@ internal fun DefaultMarkdownImage(
             .padding(vertical = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
-        AsyncImage(
-            model = data.url,
-            contentDescription = data.altText.ifEmpty { data.title },
-            modifier = Modifier
-                .applyImageSize(data.width, data.height),
-            contentScale = if (data.width != null || data.height != null) {
-                ContentScale.Fit
-            } else {
-                ContentScale.FillWidth
-            },
-            onState = { /* 可用于调试日志 */ },
-            transform = { state ->
-                when (state) {
-                    is AsyncImagePainter.State.Loading -> state
-                    is AsyncImagePainter.State.Error -> state
-                    is AsyncImagePainter.State.Success -> state
-                    is AsyncImagePainter.State.Empty -> state
-                }
-            },
+        BasicText(
+            text = data.altText.ifEmpty { data.title ?: data.url },
+            style = theme.image.captionTextStyle,
         )
     }
 }
@@ -137,8 +116,6 @@ internal fun Modifier.applyImageSize(width: Int?, height: Int?): Modifier {
         mod = mod.widthIn(max = width.dp)
     } else if (height != null) {
         mod = mod.heightIn(max = height.dp)
-    } else {
-        mod = mod.fillMaxWidth()
     }
     return mod
 }

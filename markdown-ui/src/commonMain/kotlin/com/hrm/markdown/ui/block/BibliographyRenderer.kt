@@ -29,7 +29,6 @@ internal fun BibliographyDefinitionRenderer(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(theme.codeBlockBackground)
             .padding(12.dp),
@@ -45,7 +44,6 @@ internal fun BibliographyDefinitionRenderer(
         node.entries.entries.forEachIndexed { index, (key, entry) ->
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .padding(vertical = 2.dp),
             ) {
                 BasicText(

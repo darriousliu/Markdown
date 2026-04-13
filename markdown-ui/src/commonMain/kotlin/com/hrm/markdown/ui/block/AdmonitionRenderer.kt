@@ -33,7 +33,6 @@ internal fun AdmonitionRenderer(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(style.backgroundColor)
             .drawBehind {

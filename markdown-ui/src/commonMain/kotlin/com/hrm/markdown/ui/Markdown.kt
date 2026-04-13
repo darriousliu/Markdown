@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -16,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -25,7 +23,6 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import com.hrm.codehigh.theme.CodeTheme
 import com.hrm.markdown.parser.MarkdownParser
 import com.hrm.markdown.parser.ast.BlankLine
 import com.hrm.markdown.parser.ast.ContainerNode
@@ -34,6 +31,9 @@ import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.parser.log.HLog
 import com.hrm.markdown.ui.block.BlockRenderer
 import com.hrm.markdown.ui.block.blockRenderRevision
+import com.hrm.markdown.ui.extension.DefaultExtensionProvider
+import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
+import com.hrm.markdown.ui.theme.MarkdownThemeDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -80,9 +80,9 @@ private const val TAG_RENDER = "MarkdownRender"
 fun Markdown(
     markdown: String,
     modifier: Modifier = Modifier,
-    theme: MarkdownTheme = MarkdownTheme.auto(),
-    codeTheme: CodeTheme? = null,
+    theme: MarkdownTheme = MarkdownThemeDefaults.auto(),
     config: MarkdownConfig = MarkdownConfig.Default,
+    extensionProvider: MarkdownExtensionProvider = DefaultExtensionProvider.Default,
     scrollState: ScrollState = rememberScrollState(),
     isStreaming: Boolean = false,
     retainStateOnChange: Boolean = false,
@@ -90,22 +90,23 @@ fun Markdown(
     enableScroll: Boolean = true,
     initialBlockCount: Int = 100,
     imageContent: MarkdownImageRenderer? = null,
+    loadingContent: (@Composable () -> Unit)? = null,
     onLinkClick: ((String) -> Unit)? = null,
 ) {
     val document = rememberStreamingDocument(markdown, isStreaming, config)
 
     if (document == null) {
         if (isStreaming) return
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+        if (loadingContent != null) {
+            loadingContent()
         }
     } else {
         InnerMarkdown(
             document = document,
             modifier = modifier,
             theme = theme,
-            codeTheme = codeTheme,
             config = config,
+            extensionProvider = extensionProvider,
             scrollState = scrollState,
             isStreaming = isStreaming,
             enablePagination = enablePagination,
@@ -235,9 +236,9 @@ internal suspend fun <T> updateStreamingDocumentState(
 private fun InnerMarkdown(
     document: Document,
     modifier: Modifier = Modifier,
-    theme: MarkdownTheme = MarkdownTheme.auto(),
-    codeTheme: CodeTheme? = null,
+    theme: MarkdownTheme = MarkdownThemeDefaults.auto(),
     config: MarkdownConfig = MarkdownConfig.Default,
+    extensionProvider: MarkdownExtensionProvider = DefaultExtensionProvider.Default,
     scrollState: ScrollState = rememberScrollState(),
     isStreaming: Boolean = false,
     enablePagination: Boolean = false,
@@ -247,7 +248,7 @@ private fun InnerMarkdown(
     onLinkClick: ((String) -> Unit)? = null,
 ) {
     val latestDocument by rememberUpdatedState(document)
-    var throttledDocument by remember { mutableStateOf(document, neverEqualPolicy()) }
+    var throttledDocument by remember { mutableStateOf(document) }
 
     LaunchedEffect(isStreaming) {
         if (!isStreaming) {
@@ -269,13 +270,20 @@ private fun InnerMarkdown(
     // 每次 token 到达都产生新的 Document 对象，但大部分 children 的引用没变。
     // 通过比较 children 列表的引用身份（size + 首尾元素引用 + stableKey 序列），
     // 只在结构真正变化时才更新 blockNodes 状态，避免不必要的 Column 重组。
-    val blockNodesState = remember { mutableStateOf(emptyList<Node>(), neverEqualPolicy()) }
+    val blockNodesState = remember { mutableStateOf(emptyList<Node>()) }
     val newChildren = renderDocument.children
     val newFiltered = newChildren.filter { it !is BlankLine }
     val currentList = blockNodesState.value
-    if (isStreaming || !structurallyEqual(currentList, newFiltered)) {
-        HLog.d(TAG_RENDER) { "blockNodes updated: ${currentList.size} -> ${newFiltered.size}" }
-        blockNodesState.value = newFiltered.toList()
+    val nextBlockNodes = reconcileBlockNodes(
+        current = currentList,
+        incoming = newFiltered,
+        isStreaming = isStreaming,
+    )
+    if (!structurallyEqual(currentList, nextBlockNodes)) {
+        HLog.d(TAG_RENDER) {
+            "blockNodes updated: ${currentList.size} -> ${nextBlockNodes.size}"
+        }
+        blockNodesState.value = nextBlockNodes
     }
 
     // P1: 分页加载支持 - 渐进式渲染超长文档
@@ -320,7 +328,7 @@ private fun InnerMarkdown(
             onLinkClick = onLinkClick,
             imageContent = imageContent,
             config = config,
-            codeTheme = codeTheme,
+            extensionProvider = extensionProvider,
             isStreaming = isStreaming,
         ) {
             // 流式生成期间跳过 SelectionContainer：
@@ -330,9 +338,10 @@ private fun InnerMarkdown(
             val content: @Composable () -> Unit = {
                 Column(
                     modifier = modifier
+                        .then(theme.modifiers.document)
                         .then(if (enableScroll) Modifier.verticalScroll(scrollState) else Modifier)
                         .graphicsLayer { },
-                    verticalArrangement = Arrangement.spacedBy(theme.blockSpacing),
+                    verticalArrangement = Arrangement.spacedBy(theme.document.blockSpacing),
                 ) {
                     for (node in renderBlocks) {
                         key(node::class, node.stableKey) {
@@ -372,7 +381,7 @@ internal fun MarkdownBlockChildren(
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(theme.blockSpacing),
+        verticalArrangement = Arrangement.spacedBy(theme.document.blockSpacing),
     ) {
         for (node in blockNodes) {
             key(node::class, node.stableKey) {
@@ -399,4 +408,52 @@ private fun structurallyEqual(a: List<Node>, b: List<Node>): Boolean {
         if (a[i] !== b[i]) return false
     }
     return true
+}
+
+/**
+ * 在流式场景下，尽量复用未变化前缀块的旧实例，避免 Compose 把前面的段落视为全新节点。
+ *
+ * 这里刻意保守：
+ * - 只按顺序复用公共前缀；
+ * - 仅当前后节点的类型、行范围、contentHash 都一致时才复用；
+ * - 流式模式下最后一个块通常仍在增长，始终保留新实例。
+ */
+private fun reconcileBlockNodes(
+    current: List<Node>,
+    incoming: List<Node>,
+    isStreaming: Boolean,
+): List<Node> {
+    if (current.isEmpty() || incoming.isEmpty()) return incoming.toList()
+
+    val result = ArrayList<Node>(incoming.size)
+    val reusablePrefixEndExclusive = if (isStreaming) {
+        incoming.lastIndex.coerceAtLeast(0)
+    } else {
+        incoming.size
+    }
+
+    var prefixStillReusable = true
+    for (index in incoming.indices) {
+        val incomingNode = incoming[index]
+        val currentNode = current.getOrNull(index)
+        val shouldReuse = prefixStillReusable &&
+            index < reusablePrefixEndExclusive &&
+            currentNode != null &&
+            canReuseBlockNode(currentNode, incomingNode)
+
+        if (shouldReuse) {
+            result += currentNode
+        } else {
+            prefixStillReusable = false
+            result += incomingNode
+        }
+    }
+
+    return result
+}
+
+private fun canReuseBlockNode(current: Node, incoming: Node): Boolean {
+    return current::class == incoming::class &&
+        current.lineRange == incoming.lineRange &&
+        current.contentHash == incoming.contentHash
 }

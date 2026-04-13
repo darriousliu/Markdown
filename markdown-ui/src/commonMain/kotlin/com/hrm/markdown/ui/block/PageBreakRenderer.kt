@@ -1,19 +1,9 @@
 package com.hrm.markdown.ui.block
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
+import com.hrm.markdown.ui.LocalMarkdownTheme
 
 /**
  * 分页符渲染器：`***pagebreak***`。
@@ -25,25 +15,8 @@ import androidx.compose.ui.unit.sp
 internal fun PageBreakRenderer(
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 1.dp,
-            color = Color(0xFFBDBDBD),
-        )
-        BasicText(
-            text = "— Page Break —",
-            modifier = Modifier.padding(horizontal = 8.dp),
-            style = TextStyle(
-                fontSize = 10.sp,
-                fontStyle = FontStyle.Italic,
-                color = Color(0xFF9E9E9E),
-            ),
-        )
-    }
+    LocalMarkdownExtensionProvider.current.PageBreak(
+        theme = LocalMarkdownTheme.current,
+        modifier = modifier,
+    )
 }

@@ -24,7 +24,7 @@ internal fun ColumnsLayoutRenderer(
     if (columns.isEmpty()) return
 
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         for (column in columns) {

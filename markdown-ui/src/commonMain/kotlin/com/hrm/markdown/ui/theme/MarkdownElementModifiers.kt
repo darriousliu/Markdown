@@ -19,6 +19,7 @@ data class MarkdownElementModifiers(
     val paragraph: Modifier = Modifier,
     val blockQuote: Modifier = Modifier,
     val thematicBreak: Modifier = Modifier,
+    val pageBreak: Modifier = Modifier,
     val codeBlock: Modifier = Modifier,
     val htmlBlock: Modifier = Modifier,
     val list: Modifier = Modifier,

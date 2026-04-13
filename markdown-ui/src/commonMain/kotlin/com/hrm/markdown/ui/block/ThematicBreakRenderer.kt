@@ -1,9 +1,8 @@
 package com.hrm.markdown.ui.block
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 
 /**
@@ -14,9 +13,8 @@ internal fun ThematicBreakRenderer(
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
-    HorizontalDivider(
-        modifier = modifier.fillMaxWidth(),
-        thickness = theme.dividerThickness,
-        color = theme.dividerColor,
+    LocalMarkdownExtensionProvider.current.HorizontalDivider(
+        style = theme.thematicBreak,
+        modifier = modifier,
     )
 }

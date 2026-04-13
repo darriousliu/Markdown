@@ -1,21 +1,10 @@
 package com.hrm.markdown.ui.block
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import com.hrm.markdown.parser.ast.DiagramBlock
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
-import com.hrm.markdown.ui.diagram.DiagramFallback
-import com.hrm.markdown.ui.diagram.GraphvizDiagram
-import com.hrm.markdown.ui.diagram.MermaidFlowchartDiagram
-import com.hrm.markdown.ui.diagram.MermaidSequenceDiagram
-import com.hrm.markdown.ui.diagram.PlantUMLSequenceDiagram
 
 /**
  * 图表块渲染器（Mermaid / PlantUML 等）。
@@ -30,46 +19,9 @@ internal fun DiagramBlockRenderer(
     node: DiagramBlock,
     modifier: Modifier = Modifier,
 ) {
-    val theme = LocalMarkdownTheme.current
-    val code = node.literal.trimEnd('\n')
-    val diagramType = node.diagramType.lowercase()
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(theme.codeBlockCornerRadius))
-            .background(Color(0xFFF8FAFC))
-            .padding(theme.codeBlockPadding),
-    ) {
-        when {
-            diagramType == "mermaid" -> {
-                // 判断是 flowchart / graph / sequence 等
-                val firstLine = code.lines().firstOrNull()?.trim()?.lowercase() ?: ""
-                when {
-                    firstLine.startsWith("flowchart") || firstLine.startsWith("graph") -> {
-                        MermaidFlowchartDiagram(code)
-                    }
-                    firstLine.startsWith("sequencediagram") || firstLine.startsWith("sequence") -> {
-                        MermaidSequenceDiagram(code)
-                    }
-                    else -> {
-                        // 尝试解析为 flowchart，失败则 fallback
-                        MermaidFlowchartDiagram(code)
-                    }
-                }
-            }
-            diagramType == "plantuml" -> {
-                PlantUMLSequenceDiagram(code)
-            }
-            diagramType in setOf("dot", "graphviz") -> {
-                GraphvizDiagram(code)
-            }
-            else -> {
-                val typeName = node.diagramType.replaceFirstChar {
-                    if (it.isLowerCase()) it.titlecase() else it.toString()
-                }
-                DiagramFallback(code, typeName)
-            }
-        }
-    }
+    LocalMarkdownExtensionProvider.current.Diagram(
+        node = node,
+        style = LocalMarkdownTheme.current.codeBlock,
+        modifier = modifier,
+    )
 }

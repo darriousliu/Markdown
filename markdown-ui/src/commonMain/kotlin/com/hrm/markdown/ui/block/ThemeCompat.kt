@@ -1,0 +1,84 @@
+package com.hrm.markdown.ui.block
+
+import com.hrm.markdown.ui.MarkdownTheme
+
+internal val MarkdownTheme.headingStyles
+    get() = heading.textStyles
+
+internal val MarkdownTheme.bodyStyle
+    get() = paragraph.textStyle
+
+internal val MarkdownTheme.codeBlockBackground
+    get() = codeBlock.background
+
+internal val MarkdownTheme.codeBlockCornerRadius
+    get() = codeBlock.cornerRadius
+
+internal val MarkdownTheme.codeBlockPadding
+    get() = codeBlock.padding
+
+internal val MarkdownTheme.codeBlockStyle
+    get() = codeBlock.textStyle
+
+internal val MarkdownTheme.codeBlockTitleBackground
+    get() = codeBlock.titleBackground
+
+internal val MarkdownTheme.blockQuoteBorderColor
+    get() = blockQuote.borderColor
+
+internal val MarkdownTheme.blockQuoteBorderWidth
+    get() = blockQuote.borderWidth
+
+internal val MarkdownTheme.blockQuotePadding
+    get() = blockQuote.contentPadding
+
+internal val MarkdownTheme.blockQuoteTextColor
+    get() = blockQuote.textColor
+
+internal val MarkdownTheme.dividerColor
+    get() = thematicBreak.color
+
+internal val MarkdownTheme.dividerThickness
+    get() = thematicBreak.thickness
+
+internal val MarkdownTheme.blockSpacing
+    get() = document.blockSpacing
+
+internal val MarkdownTheme.listIndent
+    get() = list.indent
+
+internal val MarkdownTheme.listBulletColor
+    get() = list.bulletColor
+
+internal val MarkdownTheme.tableBorderColor
+    get() = table.borderColor
+
+internal val MarkdownTheme.tableHeaderBackground
+    get() = table.headerBackground
+
+internal val MarkdownTheme.tableCellPadding
+    get() = table.cellPadding
+
+internal val MarkdownTheme.linkColor
+    get() = link.textStyle.color
+
+internal val MarkdownTheme.taskCheckedColor
+    get() = taskList.checkedColor
+
+internal val MarkdownTheme.taskUncheckedColor
+    get() = taskList.uncheckedColor
+
+internal val MarkdownTheme.mathFontSize
+    get() = math.fontSize.value
+
+internal val MarkdownTheme.mathBlockBackground
+    get() = math.background
+
+internal val MarkdownTheme.mathColor
+    get() = math.color
+
+internal val MarkdownTheme.admonitionStyles
+    get() = admonition.styles
+
+internal val MarkdownTheme.footnoteStyle
+    get() = footnote.textStyle

@@ -30,45 +30,59 @@ internal fun BlockRenderer(
     renderRevision: String = "",
     modifier: Modifier = Modifier,
 ) {
+    val theme = LocalMarkdownTheme.current
+    val themedModifier = modifier.then(
+        when (node) {
+            is Heading, is SetextHeading -> theme.modifiers.heading
+            is Paragraph -> theme.modifiers.paragraph
+            is ThematicBreak -> theme.modifiers.thematicBreak
+            is FencedCodeBlock, is IndentedCodeBlock -> theme.modifiers.codeBlock
+            is BlockQuote -> theme.modifiers.blockQuote
+            is ListBlock -> theme.modifiers.list
+            is HtmlBlock -> theme.modifiers.htmlBlock
+            is Table -> theme.modifiers.table
+            is MathBlock -> theme.modifiers.math
+            is Admonition -> theme.modifiers.admonition
+            is CustomContainer -> theme.modifiers.customContainer
+            is DiagramBlock -> theme.modifiers.diagram
+            is ColumnsLayout -> theme.modifiers.columns
+            is DefinitionList -> theme.modifiers.definitionList
+            is FootnoteDefinition -> theme.modifiers.footnoteDefinition
+            is PageBreak -> theme.modifiers.pageBreak
+            is ShortcodeBlock -> theme.modifiers.shortcode
+            is TabBlock -> theme.modifiers.tabBlock
+            is Figure -> theme.modifiers.figure
+            else -> Modifier
+        }
+    )
     when (node) {
-        is Heading -> HeadingRenderer(node, modifier)
-        is SetextHeading -> SetextHeadingRenderer(node, modifier)
-        is Paragraph -> ParagraphRenderer(node, modifier)
-        is ThematicBreak -> ThematicBreakRenderer(modifier)
+        is Heading -> HeadingRenderer(node, themedModifier)
+        is SetextHeading -> SetextHeadingRenderer(node, themedModifier)
+        is Paragraph -> ParagraphRenderer(node, themedModifier)
+        is ThematicBreak -> ThematicBreakRenderer(themedModifier)
         is FencedCodeBlock -> key(renderRevision) {
-            FencedCodeBlockRenderer(
-                text = node.literal,
-                language = node.language,
-                title = node.attributes.pairs["title"],
-                showLineNumbers = node.showLineNumbers,
-                startLine = node.startLineNumber,
-                highlightedLines = node.highlightLines.flattenLineNumbers(),
-                modifier = modifier,
-            )
+            FencedCodeBlockRenderer(node, themedModifier)
         }
         is IndentedCodeBlock -> key(renderRevision) {
-            IndentedCodeBlockRenderer(
-                text = node.literal,
-                modifier = modifier,
-            )
+            IndentedCodeBlockRenderer(node, themedModifier)
         }
-        is BlockQuote -> BlockQuoteRenderer(node, modifier)
-        is ListBlock -> ListBlockRenderer(node, modifier)
-        is HtmlBlock -> HtmlBlockRenderer(node, modifier)
-        is Table -> TableRenderer(node, modifier)
-        is MathBlock -> MathBlockRenderer(node, modifier)
-        is Admonition -> AdmonitionRenderer(node, modifier)
-        is CustomContainer -> CustomContainerRenderer(node, modifier)
-        is DiagramBlock -> DiagramBlockRenderer(node, modifier)
-        is ColumnsLayout -> ColumnsLayoutRenderer(node, modifier)
-        is DefinitionList -> DefinitionListRenderer(node, modifier)
-        is FootnoteDefinition -> FootnoteDefinitionRenderer(node, modifier)
-        is TocPlaceholder -> TocPlaceholderRenderer(node, modifier)
-        is PageBreak -> PageBreakRenderer(modifier)
-        is ShortcodeBlock -> ShortcodeBlockRenderer(node, modifier)
-        is TabBlock -> TabBlockRenderer(node, modifier)
-        is BibliographyDefinition -> BibliographyDefinitionRenderer(node, modifier)
-        is Figure -> FigureRenderer(node, modifier)
+        is BlockQuote -> BlockQuoteRenderer(node, themedModifier)
+        is ListBlock -> ListBlockRenderer(node, themedModifier)
+        is HtmlBlock -> HtmlBlockRenderer(node, themedModifier)
+        is Table -> TableRenderer(node, themedModifier)
+        is MathBlock -> MathBlockRenderer(node, themedModifier)
+        is Admonition -> AdmonitionRenderer(node, themedModifier)
+        is CustomContainer -> CustomContainerRenderer(node, themedModifier)
+        is DiagramBlock -> DiagramBlockRenderer(node, themedModifier)
+        is ColumnsLayout -> ColumnsLayoutRenderer(node, themedModifier)
+        is DefinitionList -> DefinitionListRenderer(node, themedModifier)
+        is FootnoteDefinition -> FootnoteDefinitionRenderer(node, themedModifier)
+        is TocPlaceholder -> TocPlaceholderRenderer(node, themedModifier)
+        is PageBreak -> PageBreakRenderer(themedModifier)
+        is ShortcodeBlock -> ShortcodeBlockRenderer(node, themedModifier)
+        is TabBlock -> TabBlockRenderer(node, themedModifier)
+        is BibliographyDefinition -> BibliographyDefinitionRenderer(node, themedModifier)
+        is Figure -> FigureRenderer(node, themedModifier)
         is FrontMatter -> { /* FrontMatter 通常不渲染 */ }
         is LinkReferenceDefinition -> { /* 引用定义不直接渲染 */ }
         is AbbreviationDefinition -> { /* 缩写定义不直接渲染 */ }
@@ -128,7 +142,7 @@ internal fun TocPlaceholderRenderer(
     if (headings.isEmpty()) return
 
     Column(
-        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = modifier.padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         BasicText(

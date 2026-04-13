@@ -30,7 +30,7 @@ internal fun HtmlBlockRenderer(
     val theme = LocalMarkdownTheme.current
     BasicText(
         text = node.literal.trimEnd('\n'),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         style = theme.codeBlockStyle.copy(fontFamily = FontFamily.Monospace),
     )
 }
@@ -46,7 +46,7 @@ internal fun DefinitionListRenderer(
     val theme = LocalMarkdownTheme.current
 
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         for (child in node.children) {
@@ -80,7 +80,7 @@ internal fun FootnoteDefinitionRenderer(
 ) {
     val theme = LocalMarkdownTheme.current
 
-    Column(modifier = modifier.fillMaxWidth().padding(top = 4.dp)) {
+    Column(modifier = modifier.padding(top = 4.dp)) {
         BasicText(
             text = "[${node.index}] ${node.label}",
             style = theme.bodyStyle.copy(

@@ -1,15 +1,10 @@
 package com.hrm.markdown.ui.block
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import com.hrm.codehigh.renderer.CodeBlock
-import com.hrm.codehigh.theme.LocalCodeTheme
-import com.hrm.markdown.ui.LocalCodeHighlightTheme
-import com.hrm.markdown.ui.LocalIsStreaming
+import com.hrm.markdown.parser.ast.FencedCodeBlock
+import com.hrm.markdown.parser.ast.IndentedCodeBlock
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 
 /**
@@ -22,21 +17,13 @@ import com.hrm.markdown.ui.LocalMarkdownTheme
  */
 @Composable
 internal fun FencedCodeBlockRenderer(
-    text: String,
-    language: String,
-    title: String?,
-    showLineNumbers: Boolean,
-    startLine: Int,
-    highlightedLines: Set<Int>,
+    node: FencedCodeBlock,
     modifier: Modifier = Modifier,
 ) {
-    CodeBlockText(
-        text = text.ifEmpty { " " },
-        language = language,
-        title = title,
-        showLineNumbers = showLineNumbers,
-        startLine = startLine,
-        highlightedLines = highlightedLines,
+    val theme = LocalMarkdownTheme.current
+    LocalMarkdownExtensionProvider.current.FencedCodeBlock(
+        node = node,
+        style = theme.codeBlock,
         modifier = modifier,
     )
 }
@@ -46,49 +33,13 @@ internal fun FencedCodeBlockRenderer(
  */
 @Composable
 internal fun IndentedCodeBlockRenderer(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    CodeBlockText(
-        text = text.ifEmpty { " " },
-        language = "",
-        title = null,
-        showLineNumbers = true,
-        startLine = 1,
-        highlightedLines = emptySet(),
-        modifier = modifier,
-    )
-}
-
-@Composable
-private fun CodeBlockText(
-    text: String,
-    language: String,
-    title: String?,
-    showLineNumbers: Boolean,
-    startLine: Int,
-    highlightedLines: Set<Int>,
+    node: IndentedCodeBlock,
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
-    val codeTheme = LocalCodeHighlightTheme.current ?: LocalCodeTheme.current
-    val isStreaming = LocalIsStreaming.current
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(theme.codeBlockCornerRadius))
-    ) {
-        CodeBlock(
-            code = text,
-            language = language,
-            title = title.orEmpty(),
-            modifier = Modifier.fillMaxWidth(),
-            isStreaming = isStreaming,
-            theme = codeTheme,
-            showLineNumbers = showLineNumbers,
-            startLine = startLine,
-            highlightedLines = highlightedLines,
-        )
-    }
+    LocalMarkdownExtensionProvider.current.IndentedCodeBlock(
+        node = node,
+        style = theme.codeBlock,
+        modifier = modifier,
+    )
 }

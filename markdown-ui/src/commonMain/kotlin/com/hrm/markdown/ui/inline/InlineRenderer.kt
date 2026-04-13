@@ -28,20 +28,14 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
-import com.hrm.codehigh.renderer.InlineCodeDefaults
-import com.hrm.codehigh.renderer.InlineCode as CodeHighInlineCode
-import com.hrm.codehigh.renderer.measureInlineCodeSize
-import com.hrm.codehigh.theme.LocalCodeTheme
-import com.hrm.latex.renderer.measure.LatexMeasurerState
-import com.hrm.latex.renderer.measure.rememberLatexMeasurer
-import com.hrm.latex.renderer.model.LatexConfig
 import com.hrm.markdown.parser.ast.*
-import com.hrm.markdown.ui.LocalCodeHighlightTheme
+import com.hrm.markdown.parser.log.HLog
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownTheme
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.extension.InlineExtensionSlot
+import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
 
 /**
  * 将容器节点的子节点渲染为 AnnotatedString。
@@ -59,25 +53,87 @@ internal fun rememberInlineContent(
     onLinkClick: ((String) -> Unit)? = null,
 ): Pair<AnnotatedString, Map<String, InlineTextContent>> {
     val theme = LocalMarkdownTheme.current
-    val latexMeasurer = rememberLatexMeasurer()
-    val density = LocalDensity.current
-    val textMeasurer = rememberTextMeasurer()
-    val inlineCodeTheme = LocalCodeHighlightTheme.current ?: LocalCodeTheme.current
-    return remember(parent, theme, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme) {
+    val extensionProvider = LocalMarkdownExtensionProvider.current
+    val hasInlineExtensions = remember(parent) {
+        containsInlineExtensionCandidates(parent.children)
+    }
+    val extensionSlots = if (hasInlineExtensions) {
+        rememberInlineExtensionSlots(parent.children, theme, extensionProvider)
+    } else {
+        emptyMap()
+    }
+
+    return if (!hasInlineExtensions) {
+        remember(parent, theme, onLinkClick) {
+            HLog.d("InlineRenderer") {"parent: ${parent.hashCode()}, theme: ${theme.hashCode()}, onLinkClick: ${onLinkClick.hashCode()}"}
+            val inlineContents = mutableMapOf<String, InlineTextContent>()
+            val annotated = buildAnnotatedString {
+                renderInlineChildren(
+                    parent.children,
+                    theme,
+                    emptyMap(),
+                    inlineContents,
+                    onLinkClick,
+                )
+            }
+            annotated to inlineContents
+        }
+    } else remember(parent, theme, extensionProvider, onLinkClick) {
+        HLog.d("InlineRenderer") {"parent: ${parent.hashCode()}, theme: ${theme.hashCode()}, extensionProvider: ${extensionProvider.hashCode()}, onLinkClick: ${onLinkClick.hashCode()}"}
         val inlineContents = mutableMapOf<String, InlineTextContent>()
         val annotated = buildAnnotatedString {
             renderInlineChildren(
                 parent.children,
                 theme,
+                extensionSlots,
                 inlineContents,
                 onLinkClick,
-                latexMeasurer,
-                density,
-                textMeasurer,
-                inlineCodeTheme,
             )
         }
         annotated to inlineContents
+    }
+}
+
+private fun containsInlineExtensionCandidates(nodes: List<Node>): Boolean {
+    for (node in nodes) {
+        when (node) {
+            is InlineMath, is Image, is ShortcodeInline -> return true
+            is ContainerNode -> if (containsInlineExtensionCandidates(node.children)) return true
+            else -> Unit
+        }
+    }
+    return false
+}
+
+@Composable
+private fun rememberInlineExtensionSlots(
+    nodes: List<Node>,
+    theme: MarkdownTheme,
+    provider: MarkdownExtensionProvider,
+): Map<Node, InlineExtensionSlot> {
+    val slots = LinkedHashMap<Node, InlineExtensionSlot>()
+    collectInlineExtensionSlots(nodes, theme, provider, slots)
+    return slots
+}
+
+@Composable
+private fun collectInlineExtensionSlots(
+    nodes: List<Node>,
+    theme: MarkdownTheme,
+    provider: MarkdownExtensionProvider,
+    slots: MutableMap<Node, InlineExtensionSlot>,
+) {
+    for (node in nodes) {
+        when (node) {
+            is InlineMath -> provider.rememberInlineMathSlot(node, theme.math)?.let { slots[node] = it }
+            is Image -> {
+                val altText = node.children.filterIsInstance<Text>().joinToString("") { it.literal }
+                provider.rememberInlineImageSlot(node, altText, theme.image)?.let { slots[node] = it }
+            }
+            is ShortcodeInline -> provider.rememberInlineShortcodeSlot(node, theme)?.let { slots[node] = it }
+            is ContainerNode -> collectInlineExtensionSlots(node.children, theme, provider, slots)
+            else -> Unit
+        }
     }
 }
 
@@ -87,49 +143,37 @@ internal fun rememberInlineContent(
 internal fun buildInlineAnnotatedString(
     nodes: List<Node>,
     theme: MarkdownTheme,
+    extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)? = null,
-    latexMeasurer: LatexMeasurerState? = null,
-    density: Density? = null,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
-    codeTheme: com.hrm.codehigh.theme.CodeTheme? = null,
 ): AnnotatedString = buildAnnotatedString {
     renderInlineChildren(
         nodes,
         theme,
+        extensionSlots,
         inlineContents,
         onLinkClick,
-        latexMeasurer,
-        density,
-        textMeasurer,
-        codeTheme,
     )
 }
 
 private fun AnnotatedString.Builder.renderInlineChildren(
     nodes: List<Node>,
     theme: MarkdownTheme,
+    extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)?,
-    latexMeasurer: LatexMeasurerState? = null,
-    density: Density? = null,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
-    inlineCodeTheme: com.hrm.codehigh.theme.CodeTheme? = null,
 ) {
     for (node in nodes) {
-        renderInlineNode(node, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+        renderInlineNode(node, theme, extensionSlots, inlineContents, onLinkClick)
     }
 }
 
 private fun AnnotatedString.Builder.renderInlineNode(
     node: Node,
     theme: MarkdownTheme,
+    extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)?,
-    latexMeasurer: LatexMeasurerState? = null,
-    density: Density? = null,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
-    inlineCodeTheme: com.hrm.codehigh.theme.CodeTheme? = null,
 ) {
     when (node) {
         is Text -> append(node.literal)
@@ -140,49 +184,25 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         is Emphasis -> {
             withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
         is StrongEmphasis -> {
             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
         is Strikethrough -> {
             withStyle(theme.strikethroughStyle) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
         is InlineCode -> {
-            if (density != null && textMeasurer != null && inlineCodeTheme != null) {
-                val inlineCodeStyle = InlineCodeDefaults.style(inlineCodeTheme)
-                val size = measureInlineCodeSize(
-                    text = node.literal,
-                    style = inlineCodeStyle,
-                    density = density,
-                    textMeasurer = textMeasurer,
-                )
-                val id = "inlinecode_${node.hashCode()}"
-                appendInlineContent(id, node.literal)
-                inlineContents[id] = InlineTextContent(
-                    placeholder = Placeholder(
-                        width = with(density) { size.width.toSp() },
-                        height = with(density) { size.height.toSp() },
-                        placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
-                    ),
-                ) {
-                    CodeHighInlineCode(
-                        text = node.literal,
-                        style = inlineCodeStyle,
-                    )
-                }
-            } else {
-                withStyle(theme.inlineCodeStyle) {
-                    append(node.literal)
-                }
+            withStyle(theme.inlineCodeStyle) {
+                append(node.literal)
             }
         }
 
@@ -200,42 +220,26 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 },
             )
             withLink(linkAnnotation) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
         is Image -> {
-            val id = "img_${node.hashCode()}"
-            val altText = node.children.filterIsInstance<Text>().joinToString("") { it.literal }
-
-            // 计算占位符尺寸
-            val placeholderWidth = (node.imageWidth?.toFloat() ?: 200f)
-            val placeholderHeight = (node.imageHeight?.toFloat() ?: 150f)
-
-            appendInlineContent(id, node.title ?: altText.ifEmpty { node.destination })
-            inlineContents[id] = InlineTextContent(
-                placeholder = Placeholder(
-                    width = placeholderWidth.sp,
-                    height = placeholderHeight.sp,
-                    placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline,
-                ),
-            ) {
-                val imageData = com.hrm.markdown.renderer.MarkdownImageData(
-                    url = node.destination,
-                    altText = altText,
-                    title = node.title,
-                    width = node.imageWidth,
-                    height = node.imageHeight,
-                    attributes = node.attributes,
-                )
-                val customRenderer = com.hrm.markdown.renderer.LocalImageRenderer.current
-                if (customRenderer != null) {
-                    customRenderer(imageData, androidx.compose.ui.Modifier)
-                } else {
-                    com.hrm.markdown.renderer.DefaultMarkdownImage(
-                        data = imageData,
-                    )
+            val slot = extensionSlots[node]
+            if (slot != null) {
+                val id = "img_${node.hashCode()}"
+                appendInlineContent(id, node.title ?: node.destination)
+                inlineContents[id] = InlineTextContent(
+                    placeholder = Placeholder(
+                        width = slot.width,
+                        height = slot.height,
+                        placeholderVerticalAlign = slot.verticalAlign,
+                    ),
+                ) {
+                    slot.content()
                 }
+            } else {
+                append(node.children.filterIsInstance<Text>().joinToString("") { it.literal }.ifEmpty { node.destination })
             }
         }
 
@@ -291,46 +295,27 @@ private fun AnnotatedString.Builder.renderInlineNode(
         }
 
         is InlineMath -> {
-            val id = "math_${node.hashCode()}"
-            val fontSize = theme.mathFontSize
-            val latexConfig = LatexConfig(
-                fontSize = fontSize.sp,
-                color = theme.mathColor,
-                darkColor = theme.mathColor,
-            )
-
-            // 使用 LatexMeasurer 精确测量公式尺寸，避免空白
-            val dims = latexMeasurer?.measure(node.literal, latexConfig)
-            val placeholderWidth = if (dims != null && density != null) {
-                with(density) { dims.widthPx.toSp() }
+            val slot = extensionSlots[node]
+            if (slot != null) {
+                val id = "math_${node.hashCode()}"
+                appendInlineContent(id, node.literal)
+                inlineContents[id] = InlineTextContent(
+                    placeholder = Placeholder(
+                        width = slot.width,
+                        height = slot.height,
+                        placeholderVerticalAlign = slot.verticalAlign,
+                    ),
+                ) {
+                    slot.content()
+                }
             } else {
-                // 回退：粗略估算
-                (fontSize * estimateLatexWidth(node.literal)).sp
-            }
-            val placeholderHeight = if (dims != null && density != null) {
-                with(density) { dims.heightPx.toSp() }
-            } else {
-                (fontSize * 1.5f).sp
-            }
-
-            appendInlineContent(id, node.literal)
-            inlineContents[id] = InlineTextContent(
-                placeholder = Placeholder(
-                    width = placeholderWidth,
-                    height = placeholderHeight,
-                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
-                ),
-            ) {
-                com.hrm.latex.renderer.Latex(
-                    latex = node.literal,
-                    config = latexConfig,
-                )
+                append(node.literal)
             }
         }
 
         is Highlight -> {
             withStyle(SpanStyle(background = theme.highlightColor)) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
@@ -340,7 +325,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     SpanStyle(baselineShift = BaselineShift.Superscript)
                 )
             ) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
@@ -350,13 +335,13 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     SpanStyle(baselineShift = BaselineShift.Subscript)
                 )
             ) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
         is InsertedText -> {
             withStyle(theme.insertedTextStyle) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
@@ -376,10 +361,10 @@ private fun AnnotatedString.Builder.renderInlineNode(
             }
             if (spanStyle != null) {
                 withStyle(spanStyle) {
-                    renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
                 }
             } else {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
 
@@ -447,29 +432,40 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 SpoilerContent(
                     node = node,
                     theme = theme,
+                    extensionSlots = extensionSlots,
                     inlineContents = inlineContents,
                     onLinkClick = onLinkClick,
-                    latexMeasurer = latexMeasurer,
-                    density = density,
-                    textMeasurer = textMeasurer,
-                    inlineCodeTheme = inlineCodeTheme,
                 )
             }
         }
 
         is ShortcodeInline -> {
-            // 渲染行内短代码：显示标签名和参数
-            withStyle(SpanStyle(
-                fontFamily = FontFamily.Monospace,
-                fontSize = theme.bodyStyle.fontSize * 0.875f,
-                color = theme.linkColor,
-            )) {
-                val argsText = if (node.args.isNotEmpty()) {
-                    " " + node.args.entries.joinToString(" ") { (k, v) ->
-                        if (k.startsWith("_")) v else "$k=$v"
-                    }
-                } else ""
-                append("{% ${node.tagName}$argsText %}")
+            val slot = extensionSlots[node]
+            if (slot != null) {
+                val id = "shortcode_${node.hashCode()}"
+                appendInlineContent(id, node.tagName)
+                inlineContents[id] = InlineTextContent(
+                    placeholder = Placeholder(
+                        width = slot.width,
+                        height = slot.height,
+                        placeholderVerticalAlign = slot.verticalAlign,
+                    ),
+                ) {
+                    slot.content()
+                }
+            } else {
+                withStyle(SpanStyle(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = theme.bodyStyle.fontSize * 0.875f,
+                    color = theme.linkColor,
+                )) {
+                    val argsText = if (node.args.isNotEmpty()) {
+                        " " + node.args.entries.joinToString(" ") { (k, v) ->
+                            if (k.startsWith("_")) v else "$k=$v"
+                        }
+                    } else ""
+                    append("{% ${node.tagName}$argsText %}")
+                }
             }
         }
 
@@ -521,18 +517,10 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         else -> {
             if (node is ContainerNode) {
-                renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
             }
         }
     }
-}
-
-/**
- * 粗略估算 LaTeX 公式的宽度比例（相对于字体大小）。
- */
-private fun estimateLatexWidth(latex: String): Float {
-    val baseLen = latex.length.toFloat()
-    return (baseLen * 0.7f).coerceIn(1.5f, 20f)
 }
 
 /**
@@ -676,12 +664,9 @@ private fun extractPlainText(node: Node): String = buildString {
 private fun SpoilerContent(
     node: Spoiler,
     theme: MarkdownTheme,
+    extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)?,
-    latexMeasurer: LatexMeasurerState?,
-    density: Density?,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer?,
-    inlineCodeTheme: com.hrm.codehigh.theme.CodeTheme?,
 ) {
     var revealed by remember { mutableStateOf(false) }
     val annotated = remember(node, theme, revealed) {
@@ -690,14 +675,14 @@ private fun SpoilerContent(
                 withStyle(SpanStyle(
                     background = theme.spoilerColor,
                 )) {
-                    renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
                 }
             } else {
                 withStyle(SpanStyle(
                     background = theme.spoilerColor,
                     color = theme.spoilerColor,
                 )) {
-                    renderInlineChildren(node.children, theme, inlineContents, onLinkClick, latexMeasurer, density, textMeasurer, inlineCodeTheme)
+                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
                 }
             }
         }

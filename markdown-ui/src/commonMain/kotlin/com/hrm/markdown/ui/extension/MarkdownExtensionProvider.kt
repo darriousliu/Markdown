@@ -5,9 +5,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.unit.TextUnit
 import com.hrm.markdown.parser.ast.CustomContainer
+import com.hrm.markdown.parser.ast.FencedCodeBlock
 import com.hrm.markdown.parser.ast.DiagramBlock
 import com.hrm.markdown.parser.ast.Figure
 import com.hrm.markdown.parser.ast.Image
+import com.hrm.markdown.parser.ast.IndentedCodeBlock
 import com.hrm.markdown.parser.ast.InlineMath
 import com.hrm.markdown.parser.ast.MathBlock
 import com.hrm.markdown.parser.ast.ShortcodeBlock
@@ -18,6 +20,7 @@ import com.hrm.markdown.ui.theme.FigureStyle
 import com.hrm.markdown.ui.theme.ImageStyle
 import com.hrm.markdown.ui.theme.MarkdownTheme
 import com.hrm.markdown.ui.theme.MathStyle
+import com.hrm.markdown.ui.theme.ThematicBreakStyle
 
 /**
  * Flavor 扩展节点的外部实现入口。
@@ -34,6 +37,40 @@ import com.hrm.markdown.ui.theme.MathStyle
  */
 interface MarkdownExtensionProvider {
 
+    @Composable
+    fun FencedCodeBlock(
+        node: FencedCodeBlock,
+        style: CodeBlockStyle,
+        modifier: Modifier,
+    ) {
+        DefaultExtensionProvider.Default.FencedCodeBlock(node, style, modifier)
+    }
+
+    @Composable
+    fun IndentedCodeBlock(
+        node: IndentedCodeBlock,
+        style: CodeBlockStyle,
+        modifier: Modifier,
+    ) {
+        DefaultExtensionProvider.Default.IndentedCodeBlock(node, style, modifier)
+    }
+
+    @Composable
+    fun HorizontalDivider(
+        style: ThematicBreakStyle,
+        modifier: Modifier,
+    ) {
+        DefaultExtensionProvider.Default.HorizontalDivider(style, modifier)
+    }
+
+    @Composable
+    fun PageBreak(
+        theme: MarkdownTheme,
+        modifier: Modifier,
+    ) {
+        DefaultExtensionProvider.Default.PageBreak(theme, modifier)
+    }
+
     // ─────────── 块级扩展 ───────────
 
     /** 渲染块级数学公式（$$...$$）。 */
@@ -43,7 +80,7 @@ interface MarkdownExtensionProvider {
         style: MathStyle,
         modifier: Modifier,
     ) {
-        DefaultExtensionFallbacks.MathBlock(node, style, modifier)
+        DefaultExtensionProvider.Default.MathBlock(node, style, modifier)
     }
 
     /** 渲染图表代码块（mermaid / plantuml / graphviz ...）。 */
@@ -53,7 +90,7 @@ interface MarkdownExtensionProvider {
         style: CodeBlockStyle,
         modifier: Modifier,
     ) {
-        DefaultExtensionFallbacks.Diagram(node, style, modifier)
+        DefaultExtensionProvider.Default.Diagram(node, style, modifier)
     }
 
     /**
@@ -69,7 +106,7 @@ interface MarkdownExtensionProvider {
         style: ImageStyle,
         modifier: Modifier,
     ) {
-        DefaultExtensionFallbacks.BlockImage(node, altText, style, modifier)
+        DefaultExtensionProvider.Default.BlockImage(node, altText, style, modifier)
     }
 
     /** 渲染 Figure 节点（带 caption 的图片）。 */
@@ -79,7 +116,7 @@ interface MarkdownExtensionProvider {
         style: FigureStyle,
         modifier: Modifier,
     ) {
-        DefaultExtensionFallbacks.Figure(node, style, modifier)
+        DefaultExtensionProvider.Default.Figure(node, style, modifier)
     }
 
     /**
@@ -95,7 +132,7 @@ interface MarkdownExtensionProvider {
         modifier: Modifier,
         renderContent: @Composable () -> Unit,
     ) {
-        DefaultExtensionFallbacks.CustomContainer(node, theme, modifier, renderContent)
+        DefaultExtensionProvider.Default.CustomContainer(node, theme, modifier, renderContent)
     }
 
     /** 渲染块级 shortcode（`{% tag %} ... {% endtag %}`）。 */
@@ -106,7 +143,7 @@ interface MarkdownExtensionProvider {
         modifier: Modifier,
         renderContent: @Composable () -> Unit,
     ) {
-        DefaultExtensionFallbacks.ShortcodeBlock(node, theme, modifier, renderContent)
+        DefaultExtensionProvider.Default.ShortcodeBlock(node, theme, modifier, renderContent)
     }
 
     /** 渲染 Tab 页面。 */
@@ -116,7 +153,7 @@ interface MarkdownExtensionProvider {
         theme: MarkdownTheme,
         modifier: Modifier,
     ) {
-        DefaultExtensionFallbacks.TabBlock(node, theme, modifier)
+        DefaultExtensionProvider.Default.TabBlock(node, theme, modifier)
     }
 
     // ─────────── 行内扩展 ───────────

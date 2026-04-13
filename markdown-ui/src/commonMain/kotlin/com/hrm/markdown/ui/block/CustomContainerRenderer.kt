@@ -1,21 +1,9 @@
 package com.hrm.markdown.ui.block
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.CustomContainer
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
 
@@ -31,56 +19,11 @@ internal fun CustomContainerRenderer(
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
-
-    // 尝试匹配 Admonition 样式
-    val admonitionStyle = theme.admonitionStyles[node.type.uppercase()]
-
-    val borderColor = admonitionStyle?.borderColor ?: Color(0xFF8B949E)
-    val backgroundColor = admonitionStyle?.backgroundColor ?: Color(0xFFF6F8FA)
-    val iconText = admonitionStyle?.iconText ?: "📦"
-    val titleColor = admonitionStyle?.titleColor ?: Color(0xFF1F2328)
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor)
-            .drawBehind {
-                drawLine(
-                    color = borderColor,
-                    start = Offset(0f, 0f),
-                    end = Offset(0f, size.height),
-                    strokeWidth = 4.dp.toPx(),
-                )
-            }
-            .padding(start = 16.dp, top = 12.dp, end = 12.dp, bottom = 12.dp),
+    LocalMarkdownExtensionProvider.current.CustomContainer(
+        node = node,
+        theme = theme,
+        modifier = modifier,
     ) {
-        // 标题行（如果有类型名或标题）
-        val displayTitle = node.title.ifEmpty {
-            node.type.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-        }
-        if (displayTitle.isNotEmpty()) {
-            Row {
-                BasicText(
-                    text = iconText,
-                    modifier = Modifier.padding(end = 8.dp),
-                )
-                BasicText(
-                    text = displayTitle,
-                    style = theme.bodyStyle.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = titleColor,
-                    ),
-                )
-            }
-        }
-
-        // 内容
-        if (node.children.isNotEmpty()) {
-            MarkdownBlockChildren(
-                parent = node,
-                modifier = Modifier.padding(top = if (displayTitle.isNotEmpty()) 8.dp else 0.dp),
-            )
-        }
+        MarkdownBlockChildren(parent = node)
     }
 }

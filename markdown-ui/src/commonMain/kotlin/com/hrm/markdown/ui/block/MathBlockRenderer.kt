@@ -1,25 +1,9 @@
 package com.hrm.markdown.ui.block
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.sp
-import com.hrm.latex.renderer.Latex
-import com.hrm.latex.renderer.measure.rememberLatexMeasurer
-import com.hrm.latex.renderer.model.LatexConfig
 import com.hrm.markdown.parser.ast.MathBlock
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 
 /**
@@ -35,49 +19,9 @@ internal fun MathBlockRenderer(
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
-    val latex = node.literal.trim()
-    // 将 color 和 darkColor 统一设为 mathColor，
-    // 避免 Latex 组件内部 isSystemInDarkTheme() 选错颜色导致文字与背景色对比度不足
-    val config = LatexConfig(
-        fontSize = (theme.mathFontSize * 1.2f).sp,
-        color = theme.mathColor,
-        darkColor = theme.mathColor,
+    LocalMarkdownExtensionProvider.current.MathBlock(
+        node = node,
+        style = theme.math,
+        modifier = modifier,
     )
-
-    // 使用 LatexMeasurer 精确测量公式高度，避免容器产生多余空白
-    val latexMeasurer = rememberLatexMeasurer(config)
-    val density = LocalDensity.current
-    val dims = latexMeasurer.measure(latex, config)
-
-    val heightModifier = if (dims != null) {
-        val heightDp = with(density) { dims.heightPx.toDp() }
-        Modifier.height(heightDp)
-    } else {
-        Modifier
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(theme.codeBlockCornerRadius))
-            .background(theme.mathBlockBackground)
-            .padding(theme.codeBlockPadding),
-    ) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-        ) {
-            Box(
-                modifier = Modifier.widthIn(min = maxWidth),
-                contentAlignment = Alignment.Center,
-            ) {
-                Latex(
-                    latex = latex,
-                    modifier = heightModifier,
-                    config = config,
-                )
-            }
-        }
-    }
 }

@@ -1,10 +1,8 @@
 package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -14,6 +12,7 @@ import com.hrm.markdown.parser.ast.Heading
 import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.parser.ast.SetextHeading
 import com.hrm.markdown.ui.LocalMarkdownConfig
+import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.LocalRendererDocument
@@ -48,19 +47,20 @@ internal fun HeadingRenderer(
         }
     } else annotated
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier) {
         BasicText(
             text = finalAnnotated,
             style = style,
             inlineContent = inlineContents,
         )
 
-        // h1 和 h2 下方添加分隔线（GitHub 风格）
-        if (node.level <= 2) {
-            HorizontalDivider(
-                modifier = Modifier.padding(top = 4.dp),
-                thickness = theme.dividerThickness,
-                color = theme.dividerColor,
+        if (node.level <= theme.heading.underlineMaxLevel && theme.heading.underlineThickness > 0.dp) {
+            LocalMarkdownExtensionProvider.current.HorizontalDivider(
+                style = theme.thematicBreak.copy(
+                    color = theme.heading.underlineColor,
+                    thickness = theme.heading.underlineThickness,
+                ),
+                modifier = Modifier.padding(top = theme.heading.underlinePadding),
             )
         }
     }
@@ -95,17 +95,19 @@ internal fun SetextHeadingRenderer(
         }
     } else annotated
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier) {
         BasicText(
             text = finalAnnotated,
             style = style,
             inlineContent = inlineContents,
         )
 
-        HorizontalDivider(
-            modifier = Modifier.padding(top = 4.dp),
-            thickness = theme.dividerThickness,
-            color = theme.dividerColor,
+        LocalMarkdownExtensionProvider.current.HorizontalDivider(
+            style = theme.thematicBreak.copy(
+                color = theme.heading.underlineColor,
+                thickness = theme.heading.underlineThickness,
+            ),
+            modifier = Modifier.padding(top = theme.heading.underlinePadding),
         )
     }
 }

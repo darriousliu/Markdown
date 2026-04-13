@@ -36,7 +36,6 @@ internal fun DiagramFallback(
 
     Column(
         modifier = modifier
-            .fillMaxWidth()
             .clip(RoundedCornerShape(theme.codeBlockCornerRadius))
             .background(Color(0xFFF0F4F8))
             .padding(theme.codeBlockPadding),

@@ -48,7 +48,6 @@ internal fun TableRenderer(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
     ) {
         // 自定义表格布局

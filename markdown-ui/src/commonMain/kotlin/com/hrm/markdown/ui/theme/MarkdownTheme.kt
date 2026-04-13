@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
  */
 @Immutable
 data class MarkdownTheme(
+    val modifiers: MarkdownElementModifiers = MarkdownElementModifiers.None,
     val document: DocumentStyle = DocumentStyle(),
     val heading: HeadingStyle = HeadingStyle(),
     val paragraph: ParagraphStyle = ParagraphStyle(),

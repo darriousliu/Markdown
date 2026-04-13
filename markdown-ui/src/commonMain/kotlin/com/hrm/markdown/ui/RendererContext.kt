@@ -5,8 +5,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import com.hrm.codehigh.theme.CodeTheme
 import com.hrm.markdown.parser.ast.Document
+import com.hrm.markdown.ui.extension.DefaultExtensionProvider
+import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
 
 /**
  * 链接点击回调，通过 [compositionLocalOf] 在组件树中传递。
@@ -31,8 +32,9 @@ internal val LocalRendererDocument = compositionLocalOf { Document() }
  * Markdown 渲染配置，通过 CompositionLocal 传递。
  */
 internal val LocalMarkdownConfig = compositionLocalOf { MarkdownConfig.Default }
-
-internal val LocalCodeHighlightTheme = compositionLocalOf<CodeTheme?> { null }
+internal val LocalMarkdownExtensionProvider = compositionLocalOf<MarkdownExtensionProvider> {
+    DefaultExtensionProvider.Default
+}
 internal val LocalIsStreaming = compositionLocalOf { false }
 
 @Composable
@@ -41,7 +43,7 @@ internal fun ProvideRendererContext(
     onLinkClick: ((String) -> Unit)?,
     imageContent: MarkdownImageRenderer? = null,
     config: MarkdownConfig = MarkdownConfig.Default,
-    codeTheme: CodeTheme? = null,
+    extensionProvider: MarkdownExtensionProvider = DefaultExtensionProvider.Default,
     isStreaming: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -63,7 +65,7 @@ internal fun ProvideRendererContext(
         LocalRendererDocument provides document,
         LocalImageRenderer provides imageContent,
         LocalMarkdownConfig provides config,
-        LocalCodeHighlightTheme provides codeTheme,
+        LocalMarkdownExtensionProvider provides extensionProvider,
         LocalIsStreaming provides isStreaming,
     ) {
         content()

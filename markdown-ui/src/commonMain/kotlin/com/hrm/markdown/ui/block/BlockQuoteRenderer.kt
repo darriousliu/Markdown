@@ -26,7 +26,6 @@ internal fun BlockQuoteRenderer(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .drawBehind {
                 val strokeWidth = borderWidthPx.toPx()
                 drawLine(
