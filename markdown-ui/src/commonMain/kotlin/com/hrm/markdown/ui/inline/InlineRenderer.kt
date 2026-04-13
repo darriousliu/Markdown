@@ -100,8 +100,19 @@ fun rememberInlineContent(key: Any, nodes: List<Node>): InlineRenderResult {
         )
     }
 
+    // 用 (stableKey, contentHash) 替代节点对象引用作为 remember key。
+    //
+    // 原始问题：key 是 Node 对象引用。流式末尾或 endStream() 时 parser 会产生新的 Node
+    // 实例，即便文本内容没有任何变化，remember 也会缓存 miss，重新构建整个 AnnotatedString。
+    //
+    // 修复后：只要节点内容哈希（contentHash）不变，AnnotatedString 就会被复用，
+    // 无论 parser 是否创建了新的 Node 对象。
     val slotKeys = slots.keys
-    val annotated = remember(key, theme, onLinkClick, slotKeys) {
+    val rememberKey = when (key) {
+        is Node -> NodeContentKey(key.stableKey, key.contentHash)
+        else -> key
+    }
+    val annotated = remember(rememberKey, theme, onLinkClick, slotKeys) {
         buildAnnotatedString {
             renderInlineChildren(nodes, theme, onLinkClick, slotKeys)
         }
@@ -109,6 +120,14 @@ fun rememberInlineContent(key: Any, nodes: List<Node>): InlineRenderResult {
 
     return InlineRenderResult(annotated, inlineContents)
 }
+
+/**
+ * 以 (起始行号, 内容哈希) 标识一段行内内容，用于 [rememberInlineContent] 的 remember key。
+ *
+ * 与直接使用 Node 对象引用相比，此 key 能在 parser 产生新 Node 实例但内容不变时
+ * 正确命中缓存，避免不必要的 AnnotatedString 重建。
+ */
+private data class NodeContentKey(val stableKey: Int, val contentHash: Long)
 
 /**
  * 用 Composable 遍历节点树，收集 provider 提供的 [InlineExtensionSlot]。
