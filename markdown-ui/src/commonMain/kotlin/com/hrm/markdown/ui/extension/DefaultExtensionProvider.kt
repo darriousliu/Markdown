@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -304,6 +306,7 @@ private fun BasicCodeBlock(
     highlightLines: List<IntRange> = emptyList(),
     modifier: Modifier,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
     val normalizedLines = lines.ifEmpty { listOf(" ") }
     val highlightedLineNumbers = highlightLines.flatMap { it.toList() }.toSet()
 
@@ -316,7 +319,14 @@ private fun BasicCodeBlock(
             Box(
                 modifier = Modifier
                     .background(style.titleBackground)
-                    .padding(horizontal = style.padding, vertical = 8.dp),
+                    .padding(
+                        PaddingValues(
+                            start = style.padding.calculateLeftPadding(layoutDirection),
+                            top = 8.dp,
+                            end = style.padding.calculateRightPadding(layoutDirection),
+                            bottom = 8.dp,
+                        )
+                    ),
             ) {
                 BasicText(
                     text = title,

@@ -1,5 +1,6 @@
 package com.hrm.markdown.ui.theme
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
@@ -96,7 +97,7 @@ data class ParagraphStyle(
 data class BlockQuoteStyle(
     val borderColor: Color = Color(0xFFD0D7DE),
     val borderWidth: Dp = 4.dp,
-    val contentPadding: Dp = 12.dp,
+    val contentPadding: PaddingValues = PaddingValues(12.dp),
     val textColor: Color = Color(0xFF656D76),
     val backgroundColor: Color = Color.Transparent,
     val cornerRadius: Dp = 0.dp,
@@ -125,7 +126,7 @@ data class CodeBlockStyle(
     ),
     val background: Color = Color(0xFFF6F8FA),
     val cornerRadius: Dp = 8.dp,
-    val padding: Dp = 12.dp,
+    val padding: PaddingValues = PaddingValues(12.dp),
     /** 代码块标题栏背景色。 */
     val titleBackground: Color = Color(0xFFEBEDF0),
     /** 代码块标题栏文字样式。 */
@@ -148,8 +149,7 @@ data class InlineCodeStyle(
     ),
     val background: Color = Color(0xFFEFF1F3),
     val cornerRadius: Dp = 4.dp,
-    val horizontalPadding: Dp = 4.dp,
-    val verticalPadding: Dp = 2.dp,
+    val padding: PaddingValues = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
     val borderColor: Color? = null,
     val borderWidth: Dp = 0.dp,
 )
@@ -160,7 +160,7 @@ data class TableStyle(
     val borderWidth: Dp = 1.dp,
     val cellBorderWidth: Dp = 0.5.dp,
     val headerBackground: Color = Color(0xFFF6F8FA),
-    val cellPadding: Dp = 8.dp,
+    val cellPadding: PaddingValues = PaddingValues(8.dp),
     val cellTextStyle: TextStyle = TextStyle(fontSize = 14.sp, lineHeight = 20.sp),
     val headerTextStyle: TextStyle = TextStyle(
         fontSize = 14.sp,
@@ -227,7 +227,7 @@ data class HtmlBlockStyle(
     ),
     val background: Color = Color.Transparent,
     val cornerRadius: Dp = 0.dp,
-    val padding: Dp = 0.dp,
+    val padding: PaddingValues = PaddingValues(0.dp),
 )
 
 @Immutable
@@ -244,7 +244,7 @@ data class MathStyle(
     val fontSize: TextUnit = 16.sp,
     val color: Color = Color(0xFF1F2328),
     val background: Color = Color(0xFFF6F8FA),
-    val padding: Dp = 12.dp,
+    val padding: PaddingValues = PaddingValues(12.dp),
     val cornerRadius: Dp = 8.dp,
 )
 
@@ -277,8 +277,7 @@ data class KbdStyle(
     ),
     val background: Color = Color(0xFFEFF1F3),
     val cornerRadius: Dp = 4.dp,
-    val horizontalPadding: Dp = 6.dp,
-    val verticalPadding: Dp = 2.dp,
+    val padding: PaddingValues = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
     val borderColor: Color? = null,
     val borderWidth: Dp = 0.dp,
 )
@@ -302,7 +301,7 @@ data class AdmonitionStyleSet(
         titleColor = Color(0xFF1F2328),
         iconText = "ℹ️",
     ),
-    val padding: Dp = 12.dp,
+    val padding: PaddingValues = PaddingValues(12.dp),
     val borderWidth: Dp = 4.dp,
     val titleTextStyle: TextStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
     val cornerRadius: Dp = 8.dp,

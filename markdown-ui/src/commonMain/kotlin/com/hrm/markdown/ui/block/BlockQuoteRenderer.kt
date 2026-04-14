@@ -1,6 +1,7 @@
 package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -9,6 +10,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.hrm.markdown.parser.ast.BlockQuote
 import com.hrm.markdown.ui.LocalMarkdownTheme
@@ -26,8 +28,10 @@ internal fun BlockQuoteRenderer(
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
+    val layoutDirection = LocalLayoutDirection.current
     val borderColor = theme.blockQuoteBorderColor
     val borderWidthPx = theme.blockQuoteBorderWidth
+    val contentPadding = theme.blockQuotePadding
     val quotedTextStyle = theme.bodyStyle.merge(
         theme.blockQuoteTextStyle ?: TextStyle(color = theme.blockQuoteTextColor)
     ).let { merged ->
@@ -51,10 +55,12 @@ internal fun BlockQuoteRenderer(
                 )
             }
             .padding(
-                start = theme.blockQuotePadding + theme.blockQuoteBorderWidth,
-                top = theme.blockQuotePadding,
-                end = theme.blockQuotePadding,
-                bottom = theme.blockQuotePadding,
+                PaddingValues(
+                    start = contentPadding.calculateLeftPadding(layoutDirection) + theme.blockQuoteBorderWidth,
+                    top = contentPadding.calculateTopPadding(),
+                    end = contentPadding.calculateRightPadding(layoutDirection),
+                    bottom = contentPadding.calculateBottomPadding(),
+                )
             ),
     ) {
         ProvideMarkdownTheme(quotedTheme) {

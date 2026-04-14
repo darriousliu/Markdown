@@ -1,6 +1,7 @@
 package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import com.hrm.markdown.parser.ast.Admonition
 import com.hrm.markdown.ui.LocalMarkdownTheme
@@ -26,7 +28,9 @@ internal fun AdmonitionRenderer(
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
+    val layoutDirection = LocalLayoutDirection.current
     val style = theme.admonition.resolve(node.type)
+    val contentPadding = theme.admonitionPadding
     val contentTextStyle = theme.paragraph.textStyle.merge(
         theme.admonitionContentTextStyle ?: TextStyle()
     )
@@ -47,10 +51,12 @@ internal fun AdmonitionRenderer(
                 )
             }
             .padding(
-                start = theme.admonitionPadding + theme.admonitionBorderWidth,
-                top = theme.admonitionPadding,
-                end = theme.admonitionPadding,
-                bottom = theme.admonitionPadding,
+                PaddingValues(
+                    start = contentPadding.calculateLeftPadding(layoutDirection) + theme.admonitionBorderWidth,
+                    top = contentPadding.calculateTopPadding(),
+                    end = contentPadding.calculateRightPadding(layoutDirection),
+                    bottom = contentPadding.calculateBottomPadding(),
+                )
             ),
     ) {
         // 标题行

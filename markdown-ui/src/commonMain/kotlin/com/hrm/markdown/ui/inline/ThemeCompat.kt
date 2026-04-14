@@ -14,11 +14,8 @@ internal val MarkdownTheme.inlineCodeBackground
 internal val MarkdownTheme.inlineCodeCornerRadius
     get() = inlineCode.cornerRadius
 
-internal val MarkdownTheme.inlineCodeHorizontalPadding
-    get() = inlineCode.horizontalPadding
-
-internal val MarkdownTheme.inlineCodeVerticalPadding
-    get() = inlineCode.verticalPadding
+internal val MarkdownTheme.inlineCodePadding
+    get() = inlineCode.padding
 
 internal val MarkdownTheme.inlineCodeBorderColor
     get() = inlineCode.borderColor
@@ -77,11 +74,8 @@ internal val MarkdownTheme.kbdBackground
 internal val MarkdownTheme.kbdCornerRadius
     get() = kbd.cornerRadius
 
-internal val MarkdownTheme.kbdHorizontalPadding
-    get() = kbd.horizontalPadding
-
-internal val MarkdownTheme.kbdVerticalPadding
-    get() = kbd.verticalPadding
+internal val MarkdownTheme.kbdPadding
+    get() = kbd.padding
 
 internal val MarkdownTheme.kbdBorderColor
     get() = kbd.borderColor

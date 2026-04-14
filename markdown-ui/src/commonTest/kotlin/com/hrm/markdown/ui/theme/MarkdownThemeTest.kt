@@ -1,7 +1,10 @@
 package com.hrm.markdown.ui.theme
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -46,15 +49,26 @@ class MarkdownThemeTest {
         val theme = MarkdownTheme()
 
         assertEquals(Color.Transparent, theme.blockQuote.backgroundColor)
+        assertEquals(PaddingValues(12.dp).toPaddingSnapshot(), theme.blockQuote.contentPadding.toPaddingSnapshot())
         assertNull(theme.blockQuote.textStyle)
 
         assertEquals(TextAlign.Start, theme.image.captionTextAlign)
         assertEquals(TextAlign.Center, theme.figure.captionTextAlign)
         assertTrue(theme.figure.captionItalic)
 
+        assertEquals(PaddingValues(horizontal = 4.dp, vertical = 2.dp).toPaddingSnapshot(), theme.inlineCode.padding.toPaddingSnapshot())
         assertNull(theme.inlineCode.borderColor)
+        assertEquals(PaddingValues(horizontal = 6.dp, vertical = 2.dp).toPaddingSnapshot(), theme.kbd.padding.toPaddingSnapshot())
         assertNull(theme.kbd.borderColor)
+        assertEquals(PaddingValues(12.dp).toPaddingSnapshot(), theme.admonition.padding.toPaddingSnapshot())
         assertTrue(theme.admonition.cornerRadius.value >= 0f)
         assertNull(theme.admonition.contentTextStyle)
     }
 }
+
+private fun PaddingValues.toPaddingSnapshot(): List<Float> = listOf(
+    calculateLeftPadding(LayoutDirection.Ltr).value,
+    calculateTopPadding().value,
+    calculateRightPadding(LayoutDirection.Ltr).value,
+    calculateBottomPadding().value,
+)
