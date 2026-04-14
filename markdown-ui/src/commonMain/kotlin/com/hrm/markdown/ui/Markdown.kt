@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -270,7 +271,7 @@ private fun InnerMarkdown(
     // 每次 token 到达都产生新的 Document 对象，但大部分 children 的引用没变。
     // 通过比较 children 列表的引用身份（size + 首尾元素引用 + stableKey 序列），
     // 只在结构真正变化时才更新 blockNodes 状态，避免不必要的 Column 重组。
-    val blockNodesState = remember { mutableStateOf(emptyList<Node>()) }
+    val blockNodesState = remember { mutableStateOf(emptyList<Node>(), neverEqualPolicy()) }
     val newChildren = renderDocument.children
     val newFiltered = newChildren.filter { it !is BlankLine }
     val currentList = blockNodesState.value
