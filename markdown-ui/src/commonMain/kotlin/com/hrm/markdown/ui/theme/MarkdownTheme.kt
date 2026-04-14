@@ -6,6 +6,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -97,6 +98,9 @@ data class BlockQuoteStyle(
     val borderWidth: Dp = 4.dp,
     val contentPadding: Dp = 12.dp,
     val textColor: Color = Color(0xFF656D76),
+    val backgroundColor: Color = Color.Transparent,
+    val cornerRadius: Dp = 0.dp,
+    val textStyle: TextStyle? = null,
 )
 
 @Immutable
@@ -143,6 +147,11 @@ data class InlineCodeStyle(
         fontSize = 14.sp,
     ),
     val background: Color = Color(0xFFEFF1F3),
+    val cornerRadius: Dp = 4.dp,
+    val horizontalPadding: Dp = 4.dp,
+    val verticalPadding: Dp = 2.dp,
+    val borderColor: Color? = null,
+    val borderWidth: Dp = 0.dp,
 )
 
 @Immutable
@@ -216,6 +225,9 @@ data class HtmlBlockStyle(
         fontSize = 14.sp,
         lineHeight = 20.sp,
     ),
+    val background: Color = Color.Transparent,
+    val cornerRadius: Dp = 0.dp,
+    val padding: Dp = 0.dp,
 )
 
 @Immutable
@@ -241,11 +253,14 @@ data class ImageStyle(
     /** 占位符默认尺寸，供扩展 provider 参考。 */
     val defaultWidth: Dp = 200.dp,
     val defaultHeight: Dp = 150.dp,
+    val cornerRadius: Dp = 0.dp,
     /** 图片标题（figcaption）样式。 */
     val captionTextStyle: TextStyle = TextStyle(
         fontSize = 13.sp,
         color = Color(0xFF656D76),
     ),
+    val captionTopPadding: Dp = 4.dp,
+    val captionTextAlign: TextAlign = TextAlign.Start,
 )
 
 @Immutable
@@ -261,6 +276,11 @@ data class KbdStyle(
         fontWeight = FontWeight.Medium,
     ),
     val background: Color = Color(0xFFEFF1F3),
+    val cornerRadius: Dp = 4.dp,
+    val horizontalPadding: Dp = 6.dp,
+    val verticalPadding: Dp = 2.dp,
+    val borderColor: Color? = null,
+    val borderWidth: Dp = 0.dp,
 )
 
 @Immutable
@@ -285,6 +305,10 @@ data class AdmonitionStyleSet(
     val padding: Dp = 12.dp,
     val borderWidth: Dp = 4.dp,
     val titleTextStyle: TextStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+    val cornerRadius: Dp = 8.dp,
+    val titleContentSpacing: Dp = 8.dp,
+    val iconSpacing: Dp = 8.dp,
+    val contentTextStyle: TextStyle? = null,
 ) {
     fun resolve(type: String): AdmonitionStyle =
         styles[type] ?: styles[type.uppercase()] ?: fallback
@@ -326,6 +350,8 @@ data class FigureStyle(
         color = Color(0xFF656D76),
     ),
     val captionTopPadding: Dp = 4.dp,
+    val captionTextAlign: TextAlign = TextAlign.Center,
+    val captionItalic: Boolean = true,
 )
 
 private fun defaultHeadingTextStyles(): List<TextStyle> = listOf(

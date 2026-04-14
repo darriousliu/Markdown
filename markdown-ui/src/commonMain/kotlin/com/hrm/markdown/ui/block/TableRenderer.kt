@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
@@ -12,10 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.Table
 import com.hrm.markdown.parser.ast.TableBody
 import com.hrm.markdown.parser.ast.TableCell
@@ -55,7 +52,10 @@ internal fun TableRenderer(
             allRows = allRows,
             alignments = node.columnAlignments,
             columnCount = columnCount,
-            modifier = Modifier.border(width = 1.dp, color = theme.tableBorderColor),
+            modifier = Modifier.border(
+                width = theme.tableBorderWidth,
+                color = theme.tableBorderColor,
+            ),
         )
     }
 }
@@ -83,7 +83,7 @@ private fun TableLayout(
                         alignment = alignment,
                         isHeader = isHeader,
                         modifier = Modifier
-                            .border(0.5.dp, theme.tableBorderColor)
+                            .border(theme.tableCellBorderWidth, theme.tableBorderColor)
                             .let {
                                 if (isHeader) it.background(theme.tableHeaderBackground) else it
                             }
@@ -163,9 +163,9 @@ private fun TableCellRenderer(
     }
 
     val style = if (isHeader) {
-        theme.bodyStyle.copy(fontWeight = FontWeight.Bold, textAlign = textAlign)
+        theme.tableHeaderTextStyle.copy(textAlign = textAlign)
     } else {
-        theme.bodyStyle.copy(textAlign = textAlign)
+        theme.tableCellTextStyle.copy(textAlign = textAlign)
     }
 
     if (cell == null) {

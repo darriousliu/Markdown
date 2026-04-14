@@ -1,6 +1,12 @@
 package com.hrm.markdown.ui.inline
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -11,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
@@ -19,6 +26,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -28,9 +36,41 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hrm.markdown.parser.ast.*
-import com.hrm.markdown.parser.log.HLog
+import com.hrm.markdown.parser.ast.Abbreviation
+import com.hrm.markdown.parser.ast.Autolink
+import com.hrm.markdown.parser.ast.CitationReference
+import com.hrm.markdown.parser.ast.ContainerNode
+import com.hrm.markdown.parser.ast.Emoji
+import com.hrm.markdown.parser.ast.Emphasis
+import com.hrm.markdown.parser.ast.EscapedChar
+import com.hrm.markdown.parser.ast.FootnoteReference
+import com.hrm.markdown.parser.ast.HardLineBreak
+import com.hrm.markdown.parser.ast.Highlight
+import com.hrm.markdown.parser.ast.HtmlEntity
+import com.hrm.markdown.parser.ast.Image
+import com.hrm.markdown.parser.ast.InlineCode
+import com.hrm.markdown.parser.ast.InlineHtml
+import com.hrm.markdown.parser.ast.InlineMath
+import com.hrm.markdown.parser.ast.InsertedText
+import com.hrm.markdown.parser.ast.KeyboardInput
+import com.hrm.markdown.parser.ast.Link
+import com.hrm.markdown.parser.ast.Node
+import com.hrm.markdown.parser.ast.RubyText
+import com.hrm.markdown.parser.ast.ShortcodeInline
+import com.hrm.markdown.parser.ast.SoftLineBreak
+import com.hrm.markdown.parser.ast.Spoiler
+import com.hrm.markdown.parser.ast.Strikethrough
+import com.hrm.markdown.parser.ast.StrongEmphasis
+import com.hrm.markdown.parser.ast.StyledText
+import com.hrm.markdown.parser.ast.Subscript
+import com.hrm.markdown.parser.ast.Superscript
+import com.hrm.markdown.parser.ast.Text
+import com.hrm.markdown.parser.ast.WikiLink
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownTheme
@@ -43,9 +83,6 @@ import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
  * 构建带样式标注的富文本。
  *
  * 对于无法内联的元素（如 LaTeX 行内公式），使用 InlineTextContent 机制。
- *
- * @return Triple<AnnotatedString, Map<String, InlineTextContent>, Boolean>
- *         分别是标注文本、内联内容映射、是否包含链接
  */
 @Composable
 internal fun rememberInlineContent(
@@ -54,32 +91,11 @@ internal fun rememberInlineContent(
 ): Pair<AnnotatedString, Map<String, InlineTextContent>> {
     val theme = LocalMarkdownTheme.current
     val extensionProvider = LocalMarkdownExtensionProvider.current
-    val hasInlineExtensions = remember(parent) {
-        containsInlineExtensionCandidates(parent.children)
-    }
-    val extensionSlots = if (hasInlineExtensions) {
-        rememberInlineExtensionSlots(parent.children, theme, extensionProvider)
-    } else {
-        emptyMap()
-    }
+    val density = LocalDensity.current
+    val textMeasurer = rememberTextMeasurer()
+    val extensionSlots = rememberInlineExtensionSlots(parent.children, theme, extensionProvider)
 
-    return if (!hasInlineExtensions) {
-        remember(parent, theme, onLinkClick) {
-            HLog.d("InlineRenderer") {"parent: ${parent.hashCode()}, theme: ${theme.hashCode()}, onLinkClick: ${onLinkClick.hashCode()}"}
-            val inlineContents = mutableMapOf<String, InlineTextContent>()
-            val annotated = buildAnnotatedString {
-                renderInlineChildren(
-                    parent.children,
-                    theme,
-                    emptyMap(),
-                    inlineContents,
-                    onLinkClick,
-                )
-            }
-            annotated to inlineContents
-        }
-    } else remember(parent, theme, extensionProvider, onLinkClick) {
-        HLog.d("InlineRenderer") {"parent: ${parent.hashCode()}, theme: ${theme.hashCode()}, extensionProvider: ${extensionProvider.hashCode()}, onLinkClick: ${onLinkClick.hashCode()}"}
+    return remember(parent, theme, extensionProvider, onLinkClick, density, textMeasurer) {
         val inlineContents = mutableMapOf<String, InlineTextContent>()
         val annotated = buildAnnotatedString {
             renderInlineChildren(
@@ -88,21 +104,12 @@ internal fun rememberInlineContent(
                 extensionSlots,
                 inlineContents,
                 onLinkClick,
+                density,
+                textMeasurer,
             )
         }
         annotated to inlineContents
     }
-}
-
-private fun containsInlineExtensionCandidates(nodes: List<Node>): Boolean {
-    for (node in nodes) {
-        when (node) {
-            is InlineMath, is Image, is ShortcodeInline -> return true
-            is ContainerNode -> if (containsInlineExtensionCandidates(node.children)) return true
-            else -> Unit
-        }
-    }
-    return false
 }
 
 @Composable
@@ -146,6 +153,8 @@ internal fun buildInlineAnnotatedString(
     extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)? = null,
+    density: Density? = null,
+    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
 ): AnnotatedString = buildAnnotatedString {
     renderInlineChildren(
         nodes,
@@ -153,6 +162,8 @@ internal fun buildInlineAnnotatedString(
         extensionSlots,
         inlineContents,
         onLinkClick,
+        density,
+        textMeasurer,
     )
 }
 
@@ -162,9 +173,11 @@ private fun AnnotatedString.Builder.renderInlineChildren(
     extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)?,
+    density: Density? = null,
+    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
 ) {
     for (node in nodes) {
-        renderInlineNode(node, theme, extensionSlots, inlineContents, onLinkClick)
+        renderInlineNode(node, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
     }
 }
 
@@ -174,6 +187,8 @@ private fun AnnotatedString.Builder.renderInlineNode(
     extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)?,
+    density: Density? = null,
+    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
 ) {
     when (node) {
         is Text -> append(node.literal)
@@ -183,44 +198,50 @@ private fun AnnotatedString.Builder.renderInlineNode(
         is HardLineBreak -> append("\n")
 
         is Emphasis -> {
-            withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+            withStyle(theme.emphasisStyle) {
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
         is StrongEmphasis -> {
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+            withStyle(theme.strongEmphasisStyle) {
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
         is Strikethrough -> {
             withStyle(theme.strikethroughStyle) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
         is InlineCode -> {
-            withStyle(theme.inlineCodeStyle) {
-                append(node.literal)
-            }
+            appendStyledInlineChip(
+                idPrefix = "inlinecode",
+                text = node.literal,
+                textStyle = theme.inlineCodeStyle,
+                background = theme.inlineCodeBackground,
+                cornerRadius = theme.inlineCodeCornerRadius,
+                horizontalPadding = theme.inlineCodeHorizontalPadding,
+                verticalPadding = theme.inlineCodeVerticalPadding,
+                borderColor = theme.inlineCodeBorderColor,
+                borderWidth = theme.inlineCodeBorderWidth,
+                inlineContents = inlineContents,
+                density = density,
+                textMeasurer = textMeasurer,
+            )
         }
 
         is Link -> {
             val linkAnnotation = LinkAnnotation.Clickable(
                 tag = "link",
-                styles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = theme.linkColor,
-                        textDecoration = TextDecoration.Underline,
-                    ),
-                ),
+                styles = TextLinkStyles(style = resolveLinkStyle(theme.linkStyle, theme.linkColor)),
                 linkInteractionListener = {
                     onLinkClick?.invoke(node.destination)
                 },
             )
             withLink(linkAnnotation) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
@@ -246,12 +267,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
         is Autolink -> {
             val linkAnnotation = LinkAnnotation.Clickable(
                 tag = "link",
-                styles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = theme.linkColor,
-                        textDecoration = TextDecoration.Underline,
-                    ),
-                ),
+                styles = TextLinkStyles(style = resolveLinkStyle(theme.linkStyle, theme.linkColor)),
                 linkInteractionListener = {
                     onLinkClick?.invoke(node.destination)
                 },
@@ -262,29 +278,19 @@ private fun AnnotatedString.Builder.renderInlineNode(
         }
 
         is InlineHtml -> {
-            withStyle(SpanStyle(color = Color.Gray, fontFamily = FontFamily.Monospace, fontSize = 14.sp)) {
+            withStyle(theme.inlineHtmlStyle) {
                 append(node.literal)
             }
         }
 
-        is HtmlEntity -> {
-            append(node.resolved.ifEmpty { node.literal })
-        }
+        is HtmlEntity -> append(node.resolved.ifEmpty { node.literal })
 
-        is EscapedChar -> {
-            append(node.literal)
-        }
+        is EscapedChar -> append(node.literal)
 
         is FootnoteReference -> {
             val linkAnnotation = LinkAnnotation.Clickable(
                 tag = "footnote",
-                styles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = theme.linkColor,
-                        fontSize = theme.footnoteStyle.fontSize,
-                        baselineShift = BaselineShift.Superscript,
-                    ),
-                ),
+                styles = TextLinkStyles(style = resolveFootnoteLinkStyle(theme)),
                 linkInteractionListener = {
                     // 脚注点击暂不处理，可扩展
                 },
@@ -314,8 +320,8 @@ private fun AnnotatedString.Builder.renderInlineNode(
         }
 
         is Highlight -> {
-            withStyle(SpanStyle(background = theme.highlightColor)) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+            withStyle(theme.highlight.textStyle) {
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
@@ -325,7 +331,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     SpanStyle(baselineShift = BaselineShift.Superscript)
                 )
             ) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
@@ -335,41 +341,31 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     SpanStyle(baselineShift = BaselineShift.Subscript)
                 )
             ) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
         is InsertedText -> {
             withStyle(theme.insertedTextStyle) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
-        is Emoji -> {
-            // 优先显示 unicode（已映射），否则显示 literal
-            append(node.unicode ?: node.literal.ifEmpty { ":${node.shortcode}:" })
-        }
+        is Emoji -> append(node.unicode ?: node.literal.ifEmpty { ":${node.shortcode}:" })
 
         is StyledText -> {
-            // 从属性中提取样式信息
-            val styleStr = node.style
-            val spanStyle = if (styleStr != null) {
-                parseCssStyleToSpanStyle(styleStr, theme)
-            } else {
-                // 根据 CSS class 推断样式
-                inferStyleFromClasses(node.cssClasses, theme)
-            }
+            val spanStyle = node.style?.let { parseCssStyleToSpanStyle(it, theme) }
+                ?: inferStyleFromClasses(node.cssClasses, theme)
             if (spanStyle != null) {
                 withStyle(spanStyle) {
-                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
                 }
             } else {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
 
         is Abbreviation -> {
-            // embed fullText as annotation so consumers can show tooltip on hover/click
             if (node.fullText.isNotEmpty()) {
                 pushStringAnnotation(tag = "abbreviation", annotation = node.fullText)
                 withStyle(theme.abbreviationStyle) {
@@ -384,22 +380,26 @@ private fun AnnotatedString.Builder.renderInlineNode(
         }
 
         is KeyboardInput -> {
-            // 渲染键盘按键：等宽字体 + 背景
-            withStyle(theme.kbdStyle) {
-                append(node.literal)
-            }
+            appendStyledInlineChip(
+                idPrefix = "kbd",
+                text = node.literal,
+                textStyle = theme.kbdStyle,
+                background = theme.kbdBackground,
+                cornerRadius = theme.kbdCornerRadius,
+                horizontalPadding = theme.kbdHorizontalPadding,
+                verticalPadding = theme.kbdVerticalPadding,
+                borderColor = theme.kbdBorderColor,
+                borderWidth = theme.kbdBorderWidth,
+                inlineContents = inlineContents,
+                density = density,
+                textMeasurer = textMeasurer,
+            )
         }
 
         is CitationReference -> {
             val linkAnnotation = LinkAnnotation.Clickable(
                 tag = "citation",
-                styles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = theme.linkColor,
-                        fontSize = theme.footnoteStyle.fontSize,
-                        baselineShift = BaselineShift.Superscript,
-                    ),
-                ),
+                styles = TextLinkStyles(style = resolveFootnoteLinkStyle(theme)),
                 linkInteractionListener = {
                     // 引用点击暂不处理，可扩展
                 },
@@ -411,14 +411,12 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         is Spoiler -> {
             val id = "spoiler_${node.hashCode()}"
-            // 提取纯文本用于估算占位符尺寸
             val plainText = extractPlainText(node)
             val fontSize = theme.bodyStyle.fontSize.value
-            // 估算宽度：字符数 * 字体大小 * 0.6（中文字符更宽，取较大系数）
             val avgCharWidth = plainText.sumOf { ch ->
-                if (ch.code > 0x7F) 12 else 7 // 中文字符约等宽，英文约半宽
+                if (ch.code > 0x7F) 12 else 7
             }.toFloat() / 10f * (fontSize / 16f)
-            val placeholderWidth = (avgCharWidth + 8f).sp // 加上一点 padding
+            val placeholderWidth = (avgCharWidth + 8f).sp
             val placeholderHeight = (fontSize * 1.5f).sp
 
             appendInlineContent(id, plainText)
@@ -454,11 +452,13 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     slot.content()
                 }
             } else {
-                withStyle(SpanStyle(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = theme.bodyStyle.fontSize * 0.875f,
-                    color = theme.linkColor,
-                )) {
+                withStyle(
+                    SpanStyle(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = theme.bodyStyle.fontSize * 0.875f,
+                        color = theme.linkColor,
+                    )
+                ) {
                     val argsText = if (node.args.isNotEmpty()) {
                         " " + node.args.entries.joinToString(" ") { (k, v) ->
                             if (k.startsWith("_")) v else "$k=$v"
@@ -472,12 +472,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
         is WikiLink -> {
             val linkAnnotation = LinkAnnotation.Clickable(
                 tag = "wikilink",
-                styles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = theme.linkColor,
-                        textDecoration = TextDecoration.Underline,
-                    ),
-                ),
+                styles = TextLinkStyles(style = resolveLinkStyle(theme.linkStyle, theme.linkColor)),
                 linkInteractionListener = {
                     onLinkClick?.invoke(node.target)
                 },
@@ -488,15 +483,12 @@ private fun AnnotatedString.Builder.renderInlineNode(
         }
 
         is RubyText -> {
-            // 渲染 Ruby 注音：使用 InlineTextContent 机制
             val id = "ruby_${node.hashCode()}"
             val fontSize = theme.bodyStyle.fontSize.value
-            // 估算宽度：基础文本字符数 * 字体大小
             val baseWidth = node.base.sumOf { ch ->
                 if (ch.code > 0x7F) 12 else 7
             }.toFloat() / 10f * (fontSize / 16f)
             val placeholderWidth = (baseWidth + 2f).sp
-            // 高度需要额外空间放置注音
             val placeholderHeight = (fontSize * 2.0f).sp
 
             appendInlineContent(id, node.base)
@@ -517,9 +509,132 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         else -> {
             if (node is ContainerNode) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
+                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, textMeasurer)
             }
         }
+    }
+}
+
+private fun AnnotatedString.Builder.appendStyledInlineChip(
+    idPrefix: String,
+    text: String,
+    textStyle: SpanStyle,
+    background: Color,
+    cornerRadius: Dp,
+    horizontalPadding: Dp,
+    verticalPadding: Dp,
+    borderColor: Color?,
+    borderWidth: Dp,
+    inlineContents: MutableMap<String, InlineTextContent>,
+    density: Density?,
+    textMeasurer: androidx.compose.ui.text.TextMeasurer?,
+) {
+    val displayText = text.ifEmpty { " " }
+    val id = "${idPrefix}_${displayText.hashCode()}_${inlineContents.size}"
+    val (width, height) = measureInlineChipPlaceholder(
+        text = displayText,
+        textStyle = textStyle,
+        horizontalPadding = horizontalPadding,
+        verticalPadding = verticalPadding,
+        density = density,
+        textMeasurer = textMeasurer,
+    )
+    appendInlineContent(id, displayText)
+    inlineContents[id] = InlineTextContent(
+        placeholder = Placeholder(
+            width = width,
+            height = height,
+            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+        ),
+    ) {
+        InlineChipContent(
+            text = displayText,
+            textStyle = spanStyleToTextStyle(textStyle),
+            background = background,
+            cornerRadius = cornerRadius,
+            horizontalPadding = horizontalPadding,
+            verticalPadding = verticalPadding,
+            borderColor = borderColor,
+            borderWidth = borderWidth,
+        )
+    }
+}
+
+private fun measureInlineChipPlaceholder(
+    text: String,
+    textStyle: SpanStyle,
+    horizontalPadding: Dp,
+    verticalPadding: Dp,
+    density: Density?,
+    textMeasurer: androidx.compose.ui.text.TextMeasurer?,
+): Pair<TextUnit, TextUnit> {
+    val resolvedTextStyle = spanStyleToTextStyle(textStyle)
+    if (density != null && textMeasurer != null) {
+        val result = textMeasurer.measure(
+            text = AnnotatedString(text),
+            style = resolvedTextStyle,
+        )
+        val widthPx = result.size.width + with(density) { (horizontalPadding * 2).roundToPx() }
+        val heightPx = result.size.height + with(density) { (verticalPadding * 2).roundToPx() }
+        return with(density) { widthPx.toSp() to heightPx.toSp() }
+    }
+
+    val fontSize = resolvedTextStyle.fontSize.takeIf { it != TextUnit.Unspecified }?.value ?: 14f
+    val avgCharWidth = text.sumOf { if (it.code > 0x7F) 12 else 7 }.toFloat() / 10f * (fontSize / 16f)
+    return (avgCharWidth + fontSize * 0.2f + horizontalPadding.value * 2f).sp to
+        (fontSize * 1.35f + verticalPadding.value * 2f).sp
+}
+
+private fun resolveLinkStyle(style: SpanStyle, fallbackColor: Color): SpanStyle =
+    style.merge(
+        SpanStyle(
+            color = if (style.color == Color.Unspecified) fallbackColor else Color.Unspecified,
+        )
+    )
+
+private fun resolveFootnoteLinkStyle(theme: MarkdownTheme): SpanStyle =
+    resolveLinkStyle(theme.linkStyle, theme.linkColor)
+        .merge(theme.footnoteStyle)
+        .merge(SpanStyle(baselineShift = BaselineShift.Superscript))
+
+private fun spanStyleToTextStyle(span: SpanStyle): TextStyle = TextStyle(
+    color = span.color,
+    fontSize = span.fontSize,
+    fontWeight = span.fontWeight,
+    fontStyle = span.fontStyle,
+    fontFamily = span.fontFamily,
+    background = span.background,
+    textDecoration = span.textDecoration,
+)
+
+@Composable
+private fun InlineChipContent(
+    text: String,
+    textStyle: TextStyle,
+    background: Color,
+    cornerRadius: Dp,
+    horizontalPadding: Dp,
+    verticalPadding: Dp,
+    borderColor: Color?,
+    borderWidth: Dp,
+) {
+    val shape = RoundedCornerShape(cornerRadius)
+    var chipModifier = Modifier
+        .clip(shape)
+        .background(background)
+
+    if (borderColor != null && borderWidth > 0.dp) {
+        chipModifier = chipModifier.border(borderWidth, borderColor, shape)
+    }
+
+    Box(
+        modifier = chipModifier.padding(horizontal = horizontalPadding, vertical = verticalPadding),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        BasicText(
+            text = text,
+            style = textStyle,
+        )
     }
 }
 
@@ -571,9 +686,6 @@ private fun parseCssStyleToSpanStyle(css: String, theme: MarkdownTheme): SpanSty
     )
 }
 
-/**
- * 简易 CSS 颜色解析（支持命名色和 hex）。
- */
 private fun parseCssColor(value: String): Color? {
     return when (value.trim().lowercase()) {
         "red" -> Color.Red
@@ -589,27 +701,32 @@ private fun parseCssColor(value: String): Color? {
         "purple" -> Color(0xFF800080)
         "pink" -> Color(0xFFFF69B4)
         else -> {
-            // 尝试 hex 颜色
             val hex = value.removePrefix("#")
             when (hex.length) {
-                6 -> try { Color(("FF$hex").toLong(16)) } catch (_: Exception) { null }
-                8 -> try { Color(hex.toLong(16)) } catch (_: Exception) { null }
+                6 -> try {
+                    Color(("FF$hex").toLong(16))
+                } catch (_: Exception) {
+                    null
+                }
+                8 -> try {
+                    Color(hex.toLong(16))
+                } catch (_: Exception) {
+                    null
+                }
                 3 -> try {
                     val r = hex[0].toString().repeat(2)
                     val g = hex[1].toString().repeat(2)
                     val b = hex[2].toString().repeat(2)
                     Color(("FF$r$g$b").toLong(16))
-                } catch (_: Exception) { null }
+                } catch (_: Exception) {
+                    null
+                }
                 else -> null
             }
         }
     }
 }
 
-/**
- * 根据 CSS class 名推断 SpanStyle。
- * 支持常见约定类名：red, blue, green, bold, italic, underline, highlight 等。
- */
 private fun inferStyleFromClasses(classes: List<String>, theme: MarkdownTheme): SpanStyle? {
     if (classes.isEmpty()) return null
     var color: Color? = null
@@ -644,22 +761,15 @@ private fun inferStyleFromClasses(classes: List<String>, theme: MarkdownTheme): 
     )
 }
 
-/**
- * 递归提取节点的纯文本内容。
- */
 private fun extractPlainText(node: Node): String = buildString {
     when (node) {
         is Text -> append(node.literal)
         is InlineCode -> append(node.literal)
         is ContainerNode -> node.children.forEach { append(extractPlainText(it)) }
-        else -> {}
+        else -> Unit
     }
 }
 
-/**
- * 可点击的剧透文本 Composable。
- * 初始状态下文字被遮挡（文字颜色 = 背景颜色），点击后揭示文字内容。
- */
 @Composable
 private fun SpoilerContent(
     node: Spoiler,
@@ -672,16 +782,20 @@ private fun SpoilerContent(
     val annotated = remember(node, theme, revealed) {
         buildAnnotatedString {
             if (revealed) {
-                withStyle(SpanStyle(
-                    background = theme.spoilerColor,
-                )) {
+                withStyle(
+                    SpanStyle(
+                        background = theme.spoilerColor,
+                    )
+                ) {
                     renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
                 }
             } else {
-                withStyle(SpanStyle(
-                    background = theme.spoilerColor,
-                    color = theme.spoilerColor,
-                )) {
+                withStyle(
+                    SpanStyle(
+                        background = theme.spoilerColor,
+                        color = theme.spoilerColor,
+                    )
+                ) {
                     renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick)
                 }
             }
@@ -694,20 +808,15 @@ private fun SpoilerContent(
     )
 }
 
-/**
- * Ruby 注音内容 Composable。
- * 将基础文本和注音文本垂直排列：注音在上，基础文本在下。
- */
 @Composable
 private fun RubyTextContent(
     base: String,
     annotation: String,
     theme: MarkdownTheme,
 ) {
-    androidx.compose.foundation.layout.Column(
+    Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // 注音文本（小字号，在上方）
         BasicText(
             text = annotation,
             style = theme.bodyStyle.copy(
@@ -715,7 +824,6 @@ private fun RubyTextContent(
                 lineHeight = theme.bodyStyle.fontSize * 0.6f,
             ),
         )
-        // 基础文本
         BasicText(
             text = base,
             style = theme.bodyStyle.copy(

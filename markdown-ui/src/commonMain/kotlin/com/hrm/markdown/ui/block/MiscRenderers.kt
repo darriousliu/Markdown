@@ -1,13 +1,14 @@
 package com.hrm.markdown.ui.block
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.DefinitionDescription
@@ -30,8 +31,11 @@ internal fun HtmlBlockRenderer(
     val theme = LocalMarkdownTheme.current
     BasicText(
         text = node.literal.trimEnd('\n'),
-        modifier = modifier,
-        style = theme.codeBlockStyle.copy(fontFamily = FontFamily.Monospace),
+        modifier = modifier
+            .clip(RoundedCornerShape(theme.htmlBlockCornerRadius))
+            .background(theme.htmlBlockBackground)
+            .padding(theme.htmlBlockPadding),
+        style = theme.htmlBlockStyle,
     )
 }
 
@@ -47,7 +51,7 @@ internal fun DefinitionListRenderer(
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(theme.definitionListItemSpacing),
     ) {
         for (child in node.children) {
             when (child) {
@@ -55,13 +59,13 @@ internal fun DefinitionListRenderer(
                     val (annotated, _) = rememberInlineContent(child)
                     BasicText(
                         text = annotated,
-                        style = theme.bodyStyle.copy(fontWeight = FontWeight.Bold),
+                        style = theme.definitionListTermTextStyle,
                     )
                 }
                 is DefinitionDescription -> {
                     MarkdownBlockChildren(
                         parent = child,
-                        modifier = Modifier.padding(start = 24.dp),
+                        modifier = Modifier.padding(start = theme.definitionListDescriptionIndent),
                     )
                 }
                 else -> BlockRenderer(child)

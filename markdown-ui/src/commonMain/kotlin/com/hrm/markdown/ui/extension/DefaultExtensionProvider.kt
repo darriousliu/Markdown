@@ -1,19 +1,26 @@
 package com.hrm.markdown.ui.extension
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hrm.markdown.parser.ast.CustomContainer
@@ -54,12 +61,12 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         modifier: Modifier,
     ) {
         BasicCodeBlock(
-            text = buildCodeBlockText(
-                title = node.attributes.pairs["title"],
-                language = node.language,
-                content = node.literal,
-            ),
+            lines = node.literal.lines(),
             style = style,
+            title = node.attributes.pairs["title"],
+            showLineNumbers = node.showLineNumbers,
+            startLineNumber = node.startLineNumber,
+            highlightLines = node.highlightLines,
             modifier = modifier,
         )
     }
@@ -71,7 +78,7 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         modifier: Modifier,
     ) {
         BasicCodeBlock(
-            text = node.literal,
+            lines = node.literal.lines(),
             style = style,
             modifier = modifier,
         )
@@ -145,21 +152,23 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
                 .background(style.background)
                 .padding(style.padding),
         ) {
-            when {
-                diagramType == "mermaid" -> {
+            when (diagramType) {
+                "mermaid" -> {
                     val firstLine = code.lines().firstOrNull()?.trim()?.lowercase().orEmpty()
                     when {
                         firstLine.startsWith("flowchart") || firstLine.startsWith("graph") -> {
                             MermaidFlowchartDiagram(code)
                         }
+
                         firstLine.startsWith("sequencediagram") || firstLine.startsWith("sequence") -> {
                             MermaidSequenceDiagram(code)
                         }
+
                         else -> MermaidFlowchartDiagram(code)
                     }
                 }
-                diagramType == "plantuml" -> PlantUMLSequenceDiagram(code)
-                diagramType in setOf("dot", "graphviz") -> GraphvizDiagram(code)
+                "plantuml" -> PlantUMLSequenceDiagram(code)
+                in setOf("dot", "graphviz") -> GraphvizDiagram(code)
                 else -> {
                     val typeName = node.diagramType.replaceFirstChar {
                         if (it.isLowerCase()) it.titlecase() else it.toString()
@@ -177,11 +186,23 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         style: ImageStyle,
         modifier: Modifier,
     ) {
-        BasicText(
-            text = altText.ifEmpty { node.destination },
-            modifier = modifier,
-            style = style.captionTextStyle,
-        )
+        Column(modifier = modifier) {
+            Box(
+                modifier = Modifier
+                    .width(style.defaultWidth)
+                    .height(style.defaultHeight)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius))
+                    .background(Color(0x14000000))
+                    .border(1.dp, Color(0x22000000), androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius)),
+                contentAlignment = Alignment.Center,
+            ) {
+                BasicText(
+                    text = altText.ifEmpty { node.destination },
+                    modifier = Modifier.padding(12.dp),
+                    style = style.captionTextStyle.copy(textAlign = style.captionTextAlign),
+                )
+            }
+        }
     }
 
     @Composable
@@ -191,15 +212,24 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         modifier: Modifier,
     ) {
         Column(modifier = modifier) {
-            BasicText(
-                text = "[image] ${node.imageUrl}",
-                style = TextStyle(fontSize = 13.sp),
-            )
+            Box(
+                modifier = Modifier
+                    .background(Color(0x14000000))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+            ) {
+                BasicText(
+                    text = "[image] ${node.imageUrl}",
+                    style = TextStyle(fontSize = 13.sp, textAlign = style.captionTextAlign),
+                )
+            }
             if (node.caption.isNotEmpty()) {
                 BasicText(
                     text = node.caption,
                     modifier = Modifier.padding(top = style.captionTopPadding),
-                    style = style.captionTextStyle,
+                    style = style.captionTextStyle.copy(
+                        fontStyle = if (style.captionItalic) FontStyle.Italic else FontStyle.Normal,
+                        textAlign = style.captionTextAlign,
+                    ),
                 )
             }
         }
@@ -266,38 +296,67 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
 
 @Composable
 private fun BasicCodeBlock(
-    text: String,
+    lines: List<String>,
     style: CodeBlockStyle,
+    title: String? = null,
+    showLineNumbers: Boolean = false,
+    startLineNumber: Int = 1,
+    highlightLines: List<IntRange> = emptyList(),
     modifier: Modifier,
 ) {
-    BasicText(
-        text = text.ifEmpty { " " },
+    val normalizedLines = lines.ifEmpty { listOf(" ") }
+    val highlightedLineNumbers = highlightLines.flatMap { it.toList() }.toSet()
+
+    Column(
         modifier = modifier
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius))
-            .background(style.background)
-            .padding(style.padding),
-        style = style.textStyle,
-    )
-}
+            .background(style.background),
+    ) {
+        if (!title.isNullOrEmpty()) {
+            Box(
+                modifier = Modifier
+                    .background(style.titleBackground)
+                    .padding(horizontal = style.padding, vertical = 8.dp),
+            ) {
+                BasicText(
+                    text = title,
+                    style = style.titleTextStyle,
+                )
+            }
+        }
 
-private fun buildCodeBlockText(
-    title: String?,
-    language: String,
-    content: String,
-): String = buildString {
-    if (!title.isNullOrEmpty()) {
-        append(title)
-        append('\n')
-    }
-    if (language.isNotEmpty()) {
-        append("```")
-        append(language)
-        append('\n')
-    }
-    append(content)
-    if (language.isNotEmpty()) {
-        append('\n')
-        append("```")
+        Column(
+            modifier = Modifier.padding(style.padding),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            normalizedLines.forEachIndexed { index, line ->
+                val lineNumber = startLineNumber + index
+                val isHighlighted = lineNumber in highlightedLineNumbers
+                Row(
+                    modifier = Modifier
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                        .background(
+                            if (isHighlighted) style.lineHighlightBackground else Color.Transparent
+                        )
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                ) {
+                    if (showLineNumbers) {
+                        BasicText(
+                            text = lineNumber.toString(),
+                            modifier = Modifier.padding(end = 12.dp),
+                            style = style.textStyle.copy(
+                                color = style.lineNumberColor,
+                                textAlign = TextAlign.End,
+                            ),
+                        )
+                    }
+                    BasicText(
+                        text = line.ifEmpty { " " },
+                        style = style.textStyle,
+                    )
+                }
+            }
+        }
     }
 }
 

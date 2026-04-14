@@ -6,8 +6,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.Figure
 import com.hrm.markdown.ui.LocalImageRenderer
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
@@ -44,8 +42,8 @@ internal fun FigureRenderer(
                     text = node.caption,
                     modifier = Modifier.padding(top = theme.figure.captionTopPadding),
                     style = theme.figure.captionTextStyle.copy(
-                        fontStyle = FontStyle.Italic,
-                        textAlign = TextAlign.Center,
+                        fontStyle = if (theme.figure.captionItalic) FontStyle.Italic else FontStyle.Normal,
+                        textAlign = theme.figure.captionTextAlign,
                     ),
                 )
             }
