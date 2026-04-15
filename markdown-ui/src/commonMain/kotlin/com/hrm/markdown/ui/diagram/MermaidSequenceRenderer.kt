@@ -61,10 +61,13 @@ internal fun parseMermaidSequence(code: String): SequenceDiagramData? {
     return SequenceDiagramData(participantsMap.values.toList(), messages)
 }
 
-private val MERMAID_ACTOR_RE = Regex("""^actor\s+(\S+)(?:\s+as\s+(.+))?$""", RegexOption.IGNORE_CASE)
-private val MERMAID_PARTICIPANT_RE = Regex("""^participant\s+(\S+)(?:\s+as\s+(.+))?$""", RegexOption.IGNORE_CASE)
+private val MERMAID_ACTOR_RE =
+    Regex("""^actor\s+(\S+)(?:\s+as\s+(.+))?$""", RegexOption.IGNORE_CASE)
+private val MERMAID_PARTICIPANT_RE =
+    Regex("""^participant\s+(\S+)(?:\s+as\s+(.+))?$""", RegexOption.IGNORE_CASE)
+
 // matches: Alice->>Bob: Hello  or  Alice-->>Bob: Hi  etc
-private val MERMAID_MSG_RE = Regex("""^(.+?)\s*(-->>|-->|->(?:>)?|-x|--x)\s*(.+?)\s*:\s*(.*)$""")
+private val MERMAID_MSG_RE = Regex("""^(.+?)\s*(-->>|-->|->>?|-x|--x)\s*(.+?)\s*:\s*(.*)$""")
 
 // parses mermaid syntax then reuses shared sequence diagram drawing engine
 @Composable

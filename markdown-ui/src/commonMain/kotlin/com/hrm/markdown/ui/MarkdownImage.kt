@@ -1,12 +1,13 @@
 package com.hrm.markdown.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -15,7 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.hrm.markdown.ui.theme.ImageStyle
 import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
@@ -111,7 +112,7 @@ internal fun DefaultMarkdownImage(
 @Composable
 internal fun MarkdownImageFrame(
     data: MarkdownImageData,
-    style: com.hrm.markdown.ui.theme.ImageStyle,
+    style: ImageStyle,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {

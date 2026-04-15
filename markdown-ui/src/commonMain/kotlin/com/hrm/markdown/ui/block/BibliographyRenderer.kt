@@ -1,10 +1,10 @@
 package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -34,9 +34,10 @@ internal fun BibliographyDefinitionRenderer(
     ) {
         BasicText(
             text = "References",
-            style = theme.bibliographyTitleTextStyle ?: theme.headingStyles.getOrElse(3) { theme.bodyStyle }.copy(
-                fontWeight = FontWeight.Bold,
-            ),
+            style = theme.bibliographyTitleTextStyle
+                ?: theme.headingStyles.getOrElse(3) { theme.bodyStyle }.copy(
+                    fontWeight = FontWeight.Bold,
+                ),
             modifier = Modifier.padding(bottom = theme.bibliographyTitleBottomPadding),
         )
 

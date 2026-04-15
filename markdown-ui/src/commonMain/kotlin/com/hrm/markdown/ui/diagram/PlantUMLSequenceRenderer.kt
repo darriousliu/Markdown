@@ -25,8 +25,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import com.hrm.markdown.ui.theme.MarkdownTheme
 import com.hrm.markdown.ui.theme.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.MarkdownTheme
 import kotlin.math.max
 
 // ─── Data Model ───
@@ -92,7 +92,8 @@ internal fun parsePlantUMLSequence(code: String): SequenceDiagramData? {
         }
 
         // Messages: A -> B : label
-        val msgMatch = Regex("""^(.+?)\s*(-->>|->>?|-->|<--<?|<-<?)\s*(.+?)\s*:\s*(.*)$""").find(line)
+        val msgMatch =
+            Regex("""^(.+?)\s*(-->>|->>?|-->|<--<?|<-<?)\s*(.+?)\s*:\s*(.*)$""").find(line)
         if (msgMatch != null) {
             val rawFrom = msgMatch.groupValues[1].trim()
             val arrow = msgMatch.groupValues[2].trim()
@@ -288,7 +289,10 @@ internal fun DrawScope.drawSequenceDiagram(
             )
             drawText(
                 labelResult,
-                topLeft = Offset(cx - labelResult.size.width / 2f, boxY + (partHeight - labelResult.size.height) / 2f),
+                topLeft = Offset(
+                    cx - labelResult.size.width / 2f,
+                    boxY + (partHeight - labelResult.size.height) / 2f
+                ),
             )
         }
     }
@@ -325,7 +329,10 @@ internal fun DrawScope.drawSequenceDiagram(
             )
             drawText(
                 labelResult,
-                topLeft = Offset(cx - labelResult.size.width / 2f, lifelineEndY + (partHeight - labelResult.size.height) / 2f),
+                topLeft = Offset(
+                    cx - labelResult.size.width / 2f,
+                    lifelineEndY + (partHeight - labelResult.size.height) / 2f
+                ),
             )
         }
     }
@@ -341,7 +348,8 @@ internal fun DrawScope.drawSequenceDiagram(
         val isLeftToRight = toX >= fromX
 
         // Draw arrow line
-        val isDashed = msg.arrowStyle == ArrowStyle.DOTTED || msg.arrowStyle == ArrowStyle.DOTTED_OPEN
+        val isDashed =
+            msg.arrowStyle == ArrowStyle.DOTTED || msg.arrowStyle == ArrowStyle.DOTTED_OPEN
         if (isDashed) {
             drawLine(
                 MSG_COLOR,
@@ -375,7 +383,10 @@ internal fun DrawScope.drawSequenceDiagram(
             val midX = (fromX + toX) / 2
             drawText(
                 labelResult,
-                topLeft = Offset(midX - labelResult.size.width / 2f, y - labelResult.size.height - 4f),
+                topLeft = Offset(
+                    midX - labelResult.size.width / 2f,
+                    y - labelResult.size.height - 4f
+                ),
             )
         }
     }
@@ -396,14 +407,34 @@ private fun DrawScope.drawActor(
     val labelOffset = bodyBottom + 12f
 
     // Head
-    drawCircle(ACTOR_COLOR, radius = headR, center = Offset(cx, topY + headR), style = Stroke(width = 2f))
+    drawCircle(
+        ACTOR_COLOR,
+        radius = headR,
+        center = Offset(cx, topY + headR),
+        style = Stroke(width = 2f)
+    )
     // Body
     drawLine(ACTOR_COLOR, Offset(cx, topY + headR * 2), Offset(cx, bodyBottom), strokeWidth = 2f)
     // Arms
-    drawLine(ACTOR_COLOR, Offset(cx - 14f, bodyTop + 2f), Offset(cx + 14f, bodyTop + 2f), strokeWidth = 2f)
+    drawLine(
+        ACTOR_COLOR,
+        Offset(cx - 14f, bodyTop + 2f),
+        Offset(cx + 14f, bodyTop + 2f),
+        strokeWidth = 2f
+    )
     // Legs
-    drawLine(ACTOR_COLOR, Offset(cx, bodyBottom), Offset(cx - 10f, bodyBottom + 12f), strokeWidth = 2f)
-    drawLine(ACTOR_COLOR, Offset(cx, bodyBottom), Offset(cx + 10f, bodyBottom + 12f), strokeWidth = 2f)
+    drawLine(
+        ACTOR_COLOR,
+        Offset(cx, bodyBottom),
+        Offset(cx - 10f, bodyBottom + 12f),
+        strokeWidth = 2f
+    )
+    drawLine(
+        ACTOR_COLOR,
+        Offset(cx, bodyBottom),
+        Offset(cx + 10f, bodyBottom + 12f),
+        strokeWidth = 2f
+    )
 
     // Label
     val labelResult = textMeasurer.measure(

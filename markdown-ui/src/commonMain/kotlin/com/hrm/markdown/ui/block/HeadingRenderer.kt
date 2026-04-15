@@ -12,10 +12,10 @@ import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.parser.ast.SetextHeading
 import com.hrm.markdown.ui.LocalMarkdownConfig
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.LocalRendererDocument
 import com.hrm.markdown.ui.inline.rememberInlineContent
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
  * ATX 标题渲染器 (# ~ ######)

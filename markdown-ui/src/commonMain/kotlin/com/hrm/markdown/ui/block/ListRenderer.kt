@@ -1,6 +1,7 @@
 package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,8 +19,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import com.hrm.markdown.parser.ast.ListBlock
 import com.hrm.markdown.parser.ast.ListItem
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
  * 列表渲染器（有序/无序列表）。
@@ -68,6 +69,7 @@ private fun ListItemRenderer(
                     modifier = Modifier.align(Alignment.Top),
                 )
             }
+
             ordered -> {
                 val orderedMarkerStyle = theme.listOrderedMarkerTextStyle ?: theme.bodyStyle.copy(
                     color = theme.listBulletColor,
@@ -79,6 +81,7 @@ private fun ListItemRenderer(
                     style = orderedMarkerStyle,
                 )
             }
+
             else -> {
                 BasicText(
                     text = theme.list.bullet,
@@ -104,14 +107,14 @@ private fun TaskListMarker(
     Box(
         modifier = modifier
             .size(theme.taskList.boxSize)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(theme.taskCornerRadius))
+            .clip(RoundedCornerShape(theme.taskCornerRadius))
             .background(
                 color = if (checked) theme.taskCheckedBackgroundColor else theme.taskUncheckedBackgroundColor,
             )
             .border(
                 width = theme.taskList.strokeWidth,
                 brush = SolidColor(if (checked) theme.taskCheckedBorderColor else theme.taskUncheckedBorderColor),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(theme.taskCornerRadius),
+                shape = RoundedCornerShape(theme.taskCornerRadius),
             ),
         contentAlignment = Alignment.Center,
     ) {

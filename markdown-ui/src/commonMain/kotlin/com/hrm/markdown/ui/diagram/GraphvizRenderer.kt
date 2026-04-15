@@ -41,7 +41,8 @@ internal fun parseDotGraph(code: String): FlowchartData? {
             ensureNode(nodesMap, from)
             ensureNode(nodesMap, to)
 
-            val style = if (edgeMatch.groupValues[0].contains("--")) EdgeStyle.SOLID_LINE else EdgeStyle.SOLID_ARROW
+            val style =
+                if (edgeMatch.groupValues[0].contains("--")) EdgeStyle.SOLID_LINE else EdgeStyle.SOLID_ARROW
             edges.add(FlowEdge(from, to, label, style))
             continue
         }

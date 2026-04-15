@@ -4,9 +4,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 
 /**
@@ -60,13 +62,13 @@ object MarkdownThemeDefaults {
             ),
             thematicBreak = ThematicBreakStyle(color = Color(0xFF3D444D)),
             link = LinkStyle(
-                textStyle = androidx.compose.ui.text.SpanStyle(
+                textStyle = SpanStyle(
                     color = Color(0xFF4493F8),
-                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                    textDecoration = TextDecoration.Underline,
                 ),
             ),
             highlight = HighlightStyle(
-                textStyle = androidx.compose.ui.text.SpanStyle(background = Color(0xFF5C4B00)),
+                textStyle = SpanStyle(background = Color(0xFF5C4B00)),
             ),
             math = MathStyle(color = onSurface, background = Color(0xFF161B22)),
             admonition = AdmonitionStyleSet(styles = darkAdmonitionStyles()),
@@ -90,9 +92,24 @@ object MarkdownThemeDefaults {
 private fun darkHeadingTextStyles(color: Color): List<TextStyle> = listOf(
     TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp, color = color),
     TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, lineHeight = 32.sp, color = color),
-    TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold, lineHeight = 28.sp, color = color),
-    TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, lineHeight = 24.sp, color = color),
-    TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp, color = color),
+    TextStyle(
+        fontSize = 20.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 28.sp,
+        color = color
+    ),
+    TextStyle(
+        fontSize = 16.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 24.sp,
+        color = color
+    ),
+    TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        lineHeight = 20.sp,
+        color = color
+    ),
     TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, lineHeight = 20.sp, color = color),
 )
 

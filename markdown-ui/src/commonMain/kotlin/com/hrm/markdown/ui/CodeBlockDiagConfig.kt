@@ -9,7 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * 代码块诊断配置，用于控制变量法定位流式抖动来源。
  *
  * 通过 [LocalCodeBlockDiagConfig] 在组件树中传递，
- * [com.hrm.markdown.renderer.block.CodeBlockCanvas] 消费这些配置来切换不同的渲染路径。
+ * `CodeBlockCanvas` 会消费这些配置来切换不同的渲染路径。
  *
  * **仅用于开发调试，生产环境使用默认值即可。**
  */

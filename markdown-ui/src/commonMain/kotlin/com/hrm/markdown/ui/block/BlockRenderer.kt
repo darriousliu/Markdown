@@ -8,9 +8,43 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
-import com.hrm.markdown.parser.ast.*
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
+import com.hrm.markdown.parser.ast.AbbreviationDefinition
+import com.hrm.markdown.parser.ast.Admonition
+import com.hrm.markdown.parser.ast.BibliographyDefinition
+import com.hrm.markdown.parser.ast.BlankLine
+import com.hrm.markdown.parser.ast.BlockQuote
+import com.hrm.markdown.parser.ast.ColumnsLayout
+import com.hrm.markdown.parser.ast.ContainerNode
+import com.hrm.markdown.parser.ast.CustomContainer
+import com.hrm.markdown.parser.ast.DefinitionList
+import com.hrm.markdown.parser.ast.DiagramBlock
+import com.hrm.markdown.parser.ast.Document
+import com.hrm.markdown.parser.ast.Emoji
+import com.hrm.markdown.parser.ast.EscapedChar
+import com.hrm.markdown.parser.ast.FencedCodeBlock
+import com.hrm.markdown.parser.ast.Figure
+import com.hrm.markdown.parser.ast.FootnoteDefinition
+import com.hrm.markdown.parser.ast.FrontMatter
+import com.hrm.markdown.parser.ast.Heading
+import com.hrm.markdown.parser.ast.HtmlBlock
+import com.hrm.markdown.parser.ast.HtmlEntity
+import com.hrm.markdown.parser.ast.IndentedCodeBlock
+import com.hrm.markdown.parser.ast.InlineCode
+import com.hrm.markdown.parser.ast.LinkReferenceDefinition
+import com.hrm.markdown.parser.ast.ListBlock
+import com.hrm.markdown.parser.ast.MathBlock
+import com.hrm.markdown.parser.ast.Node
+import com.hrm.markdown.parser.ast.PageBreak
+import com.hrm.markdown.parser.ast.Paragraph
+import com.hrm.markdown.parser.ast.SetextHeading
+import com.hrm.markdown.parser.ast.ShortcodeBlock
+import com.hrm.markdown.parser.ast.TabBlock
+import com.hrm.markdown.parser.ast.Table
+import com.hrm.markdown.parser.ast.Text
+import com.hrm.markdown.parser.ast.ThematicBreak
+import com.hrm.markdown.parser.ast.TocPlaceholder
 import com.hrm.markdown.ui.LocalRendererDocument
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 private fun List<IntRange>.flattenLineNumbers(): Set<Int> = buildSet {
     for (range in this@flattenLineNumbers) {
@@ -61,9 +95,11 @@ internal fun BlockRenderer(
         is FencedCodeBlock -> key(renderRevision) {
             FencedCodeBlockRenderer(node, themedModifier)
         }
+
         is IndentedCodeBlock -> key(renderRevision) {
             IndentedCodeBlockRenderer(node, themedModifier)
         }
+
         is BlockQuote -> BlockQuoteRenderer(node, themedModifier)
         is ListBlock -> ListBlockRenderer(node, themedModifier)
         is HtmlBlock -> HtmlBlockRenderer(node, themedModifier)
@@ -81,10 +117,18 @@ internal fun BlockRenderer(
         is TabBlock -> TabBlockRenderer(node, themedModifier)
         is BibliographyDefinition -> BibliographyDefinitionRenderer(node, themedModifier)
         is Figure -> FigureRenderer(node, themedModifier)
-        is FrontMatter -> { /* FrontMatter 通常不渲染 */ }
-        is LinkReferenceDefinition -> { /* 引用定义不直接渲染 */ }
-        is AbbreviationDefinition -> { /* 缩写定义不直接渲染 */ }
-        is BlankLine -> { /* 空行不渲染 */ }
+        is FrontMatter -> { /* FrontMatter 通常不渲染 */
+        }
+
+        is LinkReferenceDefinition -> { /* 引用定义不直接渲染 */
+        }
+
+        is AbbreviationDefinition -> { /* 缩写定义不直接渲染 */
+        }
+
+        is BlankLine -> { /* 空行不渲染 */
+        }
+
         else -> {
             // 未知块级节点，尝试渲染子节点
             if (node is ContainerNode) {
@@ -145,7 +189,8 @@ internal fun TocPlaceholderRenderer(
     ) {
         BasicText(
             text = "Table of Contents",
-            style = theme.tableOfContentsTitleTextStyle ?: theme.headingStyles.getOrElse(2) { theme.bodyStyle },
+            style = theme.tableOfContentsTitleTextStyle
+                ?: theme.headingStyles.getOrElse(2) { theme.bodyStyle },
             modifier = Modifier.padding(bottom = theme.tableOfContentsTitleBottomPadding),
         )
         for ((text, level, _) in headings) {
@@ -178,15 +223,18 @@ private fun collectHeadingsRecursive(node: Node, result: MutableList<HeadingInfo
             val text = node.children.joinToString("") { extractText(it) }
             result.add(HeadingInfo(text, node.level, node.id))
         }
+
         is SetextHeading -> {
             val text = node.children.joinToString("") { extractText(it) }
             result.add(HeadingInfo(text, node.level, node.id))
         }
+
         is ContainerNode -> {
             for (child in node.children) {
                 collectHeadingsRecursive(child, result)
             }
         }
+
         else -> {}
     }
 }

@@ -436,9 +436,9 @@ private fun reconcileBlockNodes(
         val incomingNode = incoming[index]
         val currentNode = current.getOrNull(index)
         val shouldReuse = prefixStillReusable &&
-            index < reusablePrefixEndExclusive &&
-            currentNode != null &&
-            canReuseBlockNode(currentNode, incomingNode)
+                index < reusablePrefixEndExclusive &&
+                currentNode != null &&
+                canReuseBlockNode(currentNode, incomingNode)
 
         if (shouldReuse) {
             result += currentNode
@@ -453,6 +453,6 @@ private fun reconcileBlockNodes(
 
 private fun canReuseBlockNode(current: Node, incoming: Node): Boolean {
     return current::class == incoming::class &&
-        current.lineRange == incoming.lineRange &&
-        current.contentHash == incoming.contentHash
+            current.lineRange == incoming.lineRange &&
+            current.contentHash == incoming.contentHash
 }

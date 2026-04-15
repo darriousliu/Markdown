@@ -18,9 +18,9 @@ import com.hrm.markdown.parser.ast.TableBody
 import com.hrm.markdown.parser.ast.TableCell
 import com.hrm.markdown.parser.ast.TableHead
 import com.hrm.markdown.parser.ast.TableRow
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.inline.rememberInlineContent
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.theme.TableCellVerticalAlignment
 
 /**
@@ -174,11 +174,12 @@ private fun TableCellRenderer(
         theme.tableCellTextStyle.copy(textAlign = textAlign)
     }
     val maxLines = if (isHeader) theme.tableHeaderMaxLines else theme.tableCellMaxLines
-    val verticalAlignment = when (if (isHeader) theme.tableHeaderVerticalAlignment else theme.tableCellVerticalAlignment) {
-        TableCellVerticalAlignment.Top -> Alignment.TopStart
-        TableCellVerticalAlignment.Center -> Alignment.CenterStart
-        TableCellVerticalAlignment.Bottom -> Alignment.BottomStart
-    }
+    val verticalAlignment =
+        when (if (isHeader) theme.tableHeaderVerticalAlignment else theme.tableCellVerticalAlignment) {
+            TableCellVerticalAlignment.Top -> Alignment.TopStart
+            TableCellVerticalAlignment.Center -> Alignment.CenterStart
+            TableCellVerticalAlignment.Bottom -> Alignment.BottomStart
+        }
 
     if (cell == null) {
         Box(modifier = modifier)
@@ -191,7 +192,12 @@ private fun TableCellRenderer(
         if (inlineContents.isEmpty()) {
             BasicText(text = annotated, style = style, maxLines = maxLines)
         } else {
-            BasicText(text = annotated, style = style, inlineContent = inlineContents, maxLines = maxLines)
+            BasicText(
+                text = annotated,
+                style = style,
+                inlineContent = inlineContents,
+                maxLines = maxLines
+            )
         }
     }
 }

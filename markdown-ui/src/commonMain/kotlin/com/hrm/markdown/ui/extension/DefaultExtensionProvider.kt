@@ -1,13 +1,13 @@
 package com.hrm.markdown.ui.extension
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -32,6 +32,7 @@ import com.hrm.markdown.parser.ast.ShortcodeBlock
 import com.hrm.markdown.parser.ast.TabBlock
 import com.hrm.markdown.parser.ast.TabItem
 import com.hrm.markdown.ui.DefaultMarkdownImage
+import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.diagram.DiagramFallback
 import com.hrm.markdown.ui.diagram.GraphvizDiagram
 import com.hrm.markdown.ui.diagram.MermaidFlowchartDiagram
@@ -126,7 +127,7 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         BasicText(
             text = node.literal,
             modifier = modifier
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius))
+                .clip(RoundedCornerShape(style.cornerRadius))
                 .background(style.background)
                 .padding(style.padding),
             style = TextStyle(
@@ -148,7 +149,7 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
 
         Column(
             modifier = modifier
-                .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius))
+                .clip(RoundedCornerShape(style.cornerRadius))
                 .background(style.background)
                 .padding(style.padding),
         ) {
@@ -167,6 +168,7 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
                         else -> MermaidFlowchartDiagram(code)
                     }
                 }
+
                 "plantuml" -> PlantUMLSequenceDiagram(code)
                 in setOf("dot", "graphviz") -> GraphvizDiagram(code)
                 else -> {
@@ -187,7 +189,7 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         modifier: Modifier,
     ) {
         DefaultMarkdownImage(
-            data = com.hrm.markdown.ui.MarkdownImageData(
+            data = MarkdownImageData(
                 url = node.destination,
                 altText = altText,
                 title = node.title,
@@ -342,7 +344,7 @@ private fun BasicCodeBlock(
                 val isHighlighted = lineNumber in highlightedLineNumbers
                 Row(
                     modifier = Modifier
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.lineCornerRadius))
+                        .clip(RoundedCornerShape(style.lineCornerRadius))
                         .background(
                             if (isHighlighted) style.lineHighlightBackground else Color.Transparent
                         )

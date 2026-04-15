@@ -2,9 +2,9 @@ package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,10 +14,10 @@ import androidx.compose.ui.text.font.FontStyle
 import com.hrm.markdown.parser.ast.Figure
 import com.hrm.markdown.ui.LocalImageRenderer
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.MarkdownImageFrame
 import com.hrm.markdown.ui.theme.FigureContentAlignment
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
  * Figure 渲染器：将 Figure 节点渲染为图片 + 标题（figcaption）。

@@ -4,19 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.hrm.markdown.parser.ast.DefinitionDescription
 import com.hrm.markdown.parser.ast.DefinitionList
 import com.hrm.markdown.parser.ast.DefinitionTerm
 import com.hrm.markdown.parser.ast.FootnoteDefinition
 import com.hrm.markdown.parser.ast.HtmlBlock
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
 import com.hrm.markdown.ui.inline.rememberInlineContent
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
  * HTML 块渲染器：以等宽字体显示原始 HTML。
@@ -60,12 +60,14 @@ internal fun DefinitionListRenderer(
                         style = theme.definitionListTermTextStyle,
                     )
                 }
+
                 is DefinitionDescription -> {
                     MarkdownBlockChildren(
                         parent = child,
                         modifier = Modifier.padding(start = theme.definitionListDescriptionIndent),
                     )
                 }
+
                 else -> BlockRenderer(child)
             }
         }

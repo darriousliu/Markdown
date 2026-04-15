@@ -1,8 +1,8 @@
 package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,8 +15,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import com.hrm.markdown.parser.ast.Admonition
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.theme.ProvideMarkdownTheme
 
 /**

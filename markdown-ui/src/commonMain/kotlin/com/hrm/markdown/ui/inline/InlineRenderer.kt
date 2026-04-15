@@ -28,6 +28,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -74,10 +75,11 @@ import com.hrm.markdown.parser.ast.Superscript
 import com.hrm.markdown.parser.ast.Text
 import com.hrm.markdown.parser.ast.WikiLink
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
-import com.hrm.markdown.ui.theme.MarkdownTheme
 import com.hrm.markdown.ui.extension.InlineExtensionSlot
 import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
+import com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.MarkdownTheme
 
 /**
  * 将容器节点的子节点渲染为 AnnotatedString。
@@ -98,7 +100,15 @@ internal fun rememberInlineContent(
     val textMeasurer = rememberTextMeasurer()
     val extensionSlots = rememberInlineExtensionSlots(parent.children, theme, extensionProvider)
 
-    return remember(parent, theme, extensionProvider, onLinkClick, density, layoutDirection, textMeasurer) {
+    return remember(
+        parent,
+        theme,
+        extensionProvider,
+        onLinkClick,
+        density,
+        layoutDirection,
+        textMeasurer
+    ) {
         val inlineContents = mutableMapOf<String, InlineTextContent>()
         val annotated = buildAnnotatedString {
             renderInlineChildren(
@@ -136,12 +146,18 @@ private fun collectInlineExtensionSlots(
 ) {
     for (node in nodes) {
         when (node) {
-            is InlineMath -> provider.rememberInlineMathSlot(node, theme.math)?.let { slots[node] = it }
+            is InlineMath -> provider.rememberInlineMathSlot(node, theme.math)
+                ?.let { slots[node] = it }
+
             is Image -> {
                 val altText = node.children.filterIsInstance<Text>().joinToString("") { it.literal }
-                provider.rememberInlineImageSlot(node, altText, theme.image)?.let { slots[node] = it }
+                provider.rememberInlineImageSlot(node, altText, theme.image)
+                    ?.let { slots[node] = it }
             }
-            is ShortcodeInline -> provider.rememberInlineShortcodeSlot(node, theme)?.let { slots[node] = it }
+
+            is ShortcodeInline -> provider.rememberInlineShortcodeSlot(node, theme)
+                ?.let { slots[node] = it }
+
             is ContainerNode -> collectInlineExtensionSlots(node.children, theme, provider, slots)
             else -> Unit
         }
@@ -159,7 +175,7 @@ internal fun buildInlineAnnotatedString(
     onLinkClick: ((String) -> Unit)? = null,
     density: Density? = null,
     layoutDirection: LayoutDirection? = null,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
+    textMeasurer: TextMeasurer? = null,
 ): AnnotatedString = buildAnnotatedString {
     renderInlineChildren(
         nodes,
@@ -181,10 +197,19 @@ private fun AnnotatedString.Builder.renderInlineChildren(
     onLinkClick: ((String) -> Unit)?,
     density: Density? = null,
     layoutDirection: LayoutDirection? = null,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
+    textMeasurer: TextMeasurer? = null,
 ) {
     for (node in nodes) {
-        renderInlineNode(node, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+        renderInlineNode(
+            node,
+            theme,
+            extensionSlots,
+            inlineContents,
+            onLinkClick,
+            density,
+            layoutDirection,
+            textMeasurer
+        )
     }
 }
 
@@ -196,7 +221,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
     onLinkClick: ((String) -> Unit)?,
     density: Density? = null,
     layoutDirection: LayoutDirection? = null,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer? = null,
+    textMeasurer: TextMeasurer? = null,
 ) {
     when (node) {
         is Text -> append(node.literal)
@@ -207,19 +232,46 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         is Emphasis -> {
             withStyle(theme.emphasisStyle) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
         is StrongEmphasis -> {
             withStyle(theme.strongEmphasisStyle) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
         is Strikethrough -> {
             withStyle(theme.strikethroughStyle) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
@@ -251,7 +303,16 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 },
             )
             withLink(linkAnnotation) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
@@ -270,7 +331,8 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     slot.content()
                 }
             } else {
-                append(node.children.filterIsInstance<Text>().joinToString("") { it.literal }.ifEmpty { node.destination })
+                append(node.children.filterIsInstance<Text>().joinToString("") { it.literal }
+                    .ifEmpty { node.destination })
             }
         }
 
@@ -331,7 +393,16 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         is Highlight -> {
             withStyle(theme.highlight.textStyle) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
@@ -341,7 +412,16 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     SpanStyle(baselineShift = BaselineShift.Superscript)
                 )
             ) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
@@ -351,13 +431,31 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     SpanStyle(baselineShift = BaselineShift.Subscript)
                 )
             ) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
         is InsertedText -> {
             withStyle(theme.insertedTextStyle) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
@@ -368,10 +466,28 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 ?: inferStyleFromClasses(node.cssClasses, theme)
             if (spanStyle != null) {
                 withStyle(spanStyle) {
-                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                    renderInlineChildren(
+                        node.children,
+                        theme,
+                        extensionSlots,
+                        inlineContents,
+                        onLinkClick,
+                        density,
+                        layoutDirection,
+                        textMeasurer
+                    )
                 }
             } else {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
 
@@ -521,7 +637,16 @@ private fun AnnotatedString.Builder.renderInlineNode(
 
         else -> {
             if (node is ContainerNode) {
-                renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, density, layoutDirection, textMeasurer)
+                renderInlineChildren(
+                    node.children,
+                    theme,
+                    extensionSlots,
+                    inlineContents,
+                    onLinkClick,
+                    density,
+                    layoutDirection,
+                    textMeasurer
+                )
             }
         }
     }
@@ -537,11 +662,11 @@ private fun AnnotatedString.Builder.appendStyledInlineChip(
     borderColor: Color?,
     borderWidth: Dp,
     placeholderVerticalAlign: PlaceholderVerticalAlign,
-    contentVerticalAlignment: com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment,
+    contentVerticalAlignment: InlineChipContentVerticalAlignment,
     inlineContents: MutableMap<String, InlineTextContent>,
     density: Density?,
     layoutDirection: LayoutDirection?,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer?,
+    textMeasurer: TextMeasurer?,
 ) {
     val displayText = text.ifEmpty { " " }
     val id = "${idPrefix}_${displayText.hashCode()}_${inlineContents.size}"
@@ -580,12 +705,12 @@ private fun measureInlineChipPlaceholder(
     padding: PaddingValues,
     density: Density?,
     layoutDirection: LayoutDirection?,
-    textMeasurer: androidx.compose.ui.text.TextMeasurer?,
+    textMeasurer: TextMeasurer?,
 ): Pair<TextUnit, TextUnit> {
     val resolvedTextStyle = spanStyleToTextStyle(textStyle)
     val resolvedLayoutDirection = layoutDirection ?: LayoutDirection.Ltr
     val horizontalPadding = padding.calculateLeftPadding(resolvedLayoutDirection) +
-        padding.calculateRightPadding(resolvedLayoutDirection)
+            padding.calculateRightPadding(resolvedLayoutDirection)
     val verticalPadding = padding.calculateTopPadding() + padding.calculateBottomPadding()
     if (density != null && textMeasurer != null) {
         val result = textMeasurer.measure(
@@ -598,9 +723,10 @@ private fun measureInlineChipPlaceholder(
     }
 
     val fontSize = resolvedTextStyle.fontSize.takeIf { it != TextUnit.Unspecified }?.value ?: 14f
-    val avgCharWidth = text.sumOf { if (it.code > 0x7F) 12 else 7 }.toFloat() / 10f * (fontSize / 16f)
+    val avgCharWidth =
+        text.sumOf { if (it.code > 0x7F) 12 else 7 }.toFloat() / 10f * (fontSize / 16f)
     return spTextUnit(avgCharWidth + fontSize * 0.2f + horizontalPadding.value) to
-        spTextUnit(fontSize * 1.35f + verticalPadding.value)
+            spTextUnit(fontSize * 1.35f + verticalPadding.value)
 }
 
 private fun resolveLinkStyle(style: SpanStyle, fallbackColor: Color): SpanStyle =
@@ -634,7 +760,7 @@ private fun InlineChipContent(
     padding: PaddingValues,
     borderColor: Color?,
     borderWidth: Dp,
-    contentVerticalAlignment: com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment,
+    contentVerticalAlignment: InlineChipContentVerticalAlignment,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     var chipModifier = Modifier
@@ -648,9 +774,9 @@ private fun InlineChipContent(
     Box(
         modifier = chipModifier.padding(padding),
         contentAlignment = when (contentVerticalAlignment) {
-            com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment.Top -> Alignment.TopStart
-            com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment.Center -> Alignment.CenterStart
-            com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment.Bottom -> Alignment.BottomStart
+            InlineChipContentVerticalAlignment.Top -> Alignment.TopStart
+            InlineChipContentVerticalAlignment.Center -> Alignment.CenterStart
+            InlineChipContentVerticalAlignment.Bottom -> Alignment.BottomStart
         },
     ) {
         BasicText(
@@ -689,11 +815,13 @@ private fun parseCssStyleToSpanStyle(css: String, theme: MarkdownTheme): SpanSty
                 "lighter" -> FontWeight.Light
                 else -> null
             }
+
             "font-style" -> fontStyle = when (value) {
                 "italic" -> FontStyle.Italic
                 "normal" -> FontStyle.Normal
                 else -> null
             }
+
             "text-decoration" -> textDecoration = when {
                 "underline" in value -> TextDecoration.Underline
                 "line-through" in value -> TextDecoration.LineThrough
@@ -732,11 +860,13 @@ private fun parseCssColor(value: String): Color? {
                 } catch (_: Exception) {
                     null
                 }
+
                 8 -> try {
                     Color(hex.toLong(16))
                 } catch (_: Exception) {
                     null
                 }
+
                 3 -> try {
                     val r = hex[0].toString().repeat(2)
                     val g = hex[1].toString().repeat(2)
@@ -745,6 +875,7 @@ private fun parseCssColor(value: String): Color? {
                 } catch (_: Exception) {
                     null
                 }
+
                 else -> null
             }
         }
@@ -811,7 +942,16 @@ private fun SpoilerContent(
                         background = theme.spoilerColor,
                     )
                 ) {
-                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, null, null, null)
+                    renderInlineChildren(
+                        node.children,
+                        theme,
+                        extensionSlots,
+                        inlineContents,
+                        onLinkClick,
+                        null,
+                        null,
+                        null
+                    )
                 }
             } else {
                 withStyle(
@@ -820,7 +960,16 @@ private fun SpoilerContent(
                         color = theme.spoilerColor,
                     )
                 ) {
-                    renderInlineChildren(node.children, theme, extensionSlots, inlineContents, onLinkClick, null, null, null)
+                    renderInlineChildren(
+                        node.children,
+                        theme,
+                        extensionSlots,
+                        inlineContents,
+                        onLinkClick,
+                        null,
+                        null,
+                        null
+                    )
                 }
             }
         }

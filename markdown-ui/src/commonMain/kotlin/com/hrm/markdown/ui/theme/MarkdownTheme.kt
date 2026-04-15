@@ -191,7 +191,10 @@ data class DiagramStyle(
     /** 连线标签文本样式。 */
     val edgeLabelTextStyle: TextStyle = TextStyle(fontSize = 11.sp),
     /** 时序图参与者标签文本样式。 */
-    val actorLabelTextStyle: TextStyle = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+    val actorLabelTextStyle: TextStyle = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium
+    ),
     /** 图表画布内容距外框的额外 inset。 */
     val canvasInset: Dp = 8.dp,
     /** 图表画布自身的内边距。 */

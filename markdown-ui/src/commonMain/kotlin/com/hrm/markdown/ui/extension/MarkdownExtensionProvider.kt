@@ -5,8 +5,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.unit.TextUnit
 import com.hrm.markdown.parser.ast.CustomContainer
-import com.hrm.markdown.parser.ast.FencedCodeBlock
 import com.hrm.markdown.parser.ast.DiagramBlock
+import com.hrm.markdown.parser.ast.FencedCodeBlock
 import com.hrm.markdown.parser.ast.Figure
 import com.hrm.markdown.parser.ast.Image
 import com.hrm.markdown.parser.ast.IndentedCodeBlock

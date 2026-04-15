@@ -23,9 +23,10 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import com.hrm.markdown.ui.theme.MarkdownTheme
 import com.hrm.markdown.ui.theme.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.MarkdownTheme
 import kotlin.math.max
+import kotlin.math.sqrt
 
 // ─── Data Model ───
 
@@ -91,6 +92,7 @@ internal fun parseMermaidFlowchart(code: String): FlowchartData? {
                 else -> FlowDirection.TD
             }
         }
+
         else -> return null
     }
 
@@ -213,12 +215,18 @@ private fun parseEdgeStyle(edgeStr: String): EdgeStyle = when {
 }
 
 private fun parseNodeDef(raw: String): FlowNode {
-    NODE_DEF_HEXAGON.find(raw)?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.HEXAGON) }
-    NODE_DEF_CIRCLE.find(raw)?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.CIRCLE) }
-    NODE_DEF_STADIUM.find(raw)?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.STADIUM) }
-    NODE_DEF_ROUND.find(raw)?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.ROUND_RECT) }
-    NODE_DEF_DIAMOND.find(raw)?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.DIAMOND) }
-    NODE_DEF_RECT.find(raw)?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.RECT) }
+    NODE_DEF_HEXAGON.find(raw)
+        ?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.HEXAGON) }
+    NODE_DEF_CIRCLE.find(raw)
+        ?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.CIRCLE) }
+    NODE_DEF_STADIUM.find(raw)
+        ?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.STADIUM) }
+    NODE_DEF_ROUND.find(raw)
+        ?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.ROUND_RECT) }
+    NODE_DEF_DIAMOND.find(raw)
+        ?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.DIAMOND) }
+    NODE_DEF_RECT.find(raw)
+        ?.let { return FlowNode(it.groupValues[1], it.groupValues[2], NodeShape.RECT) }
     // Plain id
     val id = raw.split("\\s+".toRegex()).first()
     return FlowNode(id, id, NodeShape.RECT)
@@ -340,9 +348,11 @@ internal fun layoutFlowchart(
     if (isVertical) {
         var y = padding
         for ((layerIdx, layer) in layers.withIndex()) {
-            val layerHeight = layer.maxOfOrNull { nodeSizes[it]?.second ?: MIN_NODE_H } ?: MIN_NODE_H
-            val totalWidth = layer.sumOf { (nodeSizes[it]?.first ?: MIN_NODE_W).toDouble() }.toFloat() +
-                    (layer.size - 1) * H_GAP
+            val layerHeight =
+                layer.maxOfOrNull { nodeSizes[it]?.second ?: MIN_NODE_H } ?: MIN_NODE_H
+            val totalWidth =
+                layer.sumOf { (nodeSizes[it]?.first ?: MIN_NODE_W).toDouble() }.toFloat() +
+                        (layer.size - 1) * H_GAP
             var x = padding + (if (layer.size == 1) {
                 val maxLayerWidth = layers.maxOfOrNull { l ->
                     l.sumOf { (nodeSizes[it]?.first ?: MIN_NODE_W).toDouble() }.toFloat() +
@@ -368,8 +378,9 @@ internal fun layoutFlowchart(
         if (data.direction == FlowDirection.RL) layers.reverse()
         for ((layerIdx, layer) in layers.withIndex()) {
             val layerWidth = layer.maxOfOrNull { nodeSizes[it]?.first ?: MIN_NODE_W } ?: MIN_NODE_W
-            val totalHeight = layer.sumOf { (nodeSizes[it]?.second ?: MIN_NODE_H).toDouble() }.toFloat() +
-                    (layer.size - 1) * V_GAP
+            val totalHeight =
+                layer.sumOf { (nodeSizes[it]?.second ?: MIN_NODE_H).toDouble() }.toFloat() +
+                        (layer.size - 1) * V_GAP
             var y = padding + (if (layer.size == 1) {
                 val maxLayerHeight = layers.maxOfOrNull { l ->
                     l.sumOf { (nodeSizes[it]?.second ?: MIN_NODE_H).toDouble() }.toFloat() +
@@ -426,7 +437,11 @@ internal fun DrawScope.drawFlowchart(
     }
 }
 
-private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasurer, theme: MarkdownTheme) {
+private fun DrawScope.drawFlowNode(
+    layout: NodeLayout,
+    textMeasurer: TextMeasurer,
+    theme: MarkdownTheme
+) {
     val x = layout.x
     val y = layout.y
     val w = layout.width
@@ -448,6 +463,7 @@ private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasure
                 style = Stroke(width = 2f),
             )
         }
+
         NodeShape.ROUND_RECT, NodeShape.STADIUM -> {
             val cr = if (layout.node.shape == NodeShape.STADIUM) h / 2 else 12f
             drawRoundRect(
@@ -464,6 +480,7 @@ private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasure
                 style = Stroke(width = 2f),
             )
         }
+
         NodeShape.DIAMOND -> {
             val cx = layout.centerX
             val cy = layout.centerY
@@ -477,6 +494,7 @@ private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasure
             drawPath(path, NODE_FILL)
             drawPath(path, NODE_STROKE, style = Stroke(width = 2f))
         }
+
         NodeShape.HEXAGON -> {
             val cx = layout.centerX
             val indent = w * 0.15f
@@ -492,11 +510,18 @@ private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasure
             drawPath(path, NODE_FILL)
             drawPath(path, NODE_STROKE, style = Stroke(width = 2f))
         }
+
         NodeShape.CIRCLE -> {
             val r = max(w, h) / 2
             drawCircle(NODE_FILL, radius = r, center = Offset(layout.centerX, layout.centerY))
-            drawCircle(NODE_STROKE, radius = r, center = Offset(layout.centerX, layout.centerY), style = Stroke(width = 2f))
+            drawCircle(
+                NODE_STROKE,
+                radius = r,
+                center = Offset(layout.centerX, layout.centerY),
+                style = Stroke(width = 2f)
+            )
         }
+
         NodeShape.PARALLELOGRAM -> {
             val skew = w * 0.15f
             val path = Path().apply {
@@ -563,7 +588,7 @@ private fun DrawScope.drawFlowEdge(
         // Draw dashed line
         val dx = endX - startX
         val dy = endY - startY
-        val length = kotlin.math.sqrt(dx * dx + dy * dy)
+        val length = sqrt(dx * dx + dy * dy)
         val dashLen = 6f
         val gapLen = 4f
         val ux = dx / length
@@ -588,17 +613,21 @@ private fun DrawScope.drawFlowEdge(
         val arrowSize = 8f
         val dx = endX - startX
         val dy = endY - startY
-        val length = kotlin.math.sqrt(dx * dx + dy * dy)
+        val length = sqrt(dx * dx + dy * dy)
         if (length > 0) {
             val ux = dx / length
             val uy = dy / length
             val path = Path().apply {
                 moveTo(endX, endY)
-                moveTo(endX - ux * arrowSize - uy * arrowSize * 0.5f,
-                    endY - uy * arrowSize + ux * arrowSize * 0.5f)
+                moveTo(
+                    endX - ux * arrowSize - uy * arrowSize * 0.5f,
+                    endY - uy * arrowSize + ux * arrowSize * 0.5f
+                )
                 lineTo(endX, endY)
-                lineTo(endX - ux * arrowSize + uy * arrowSize * 0.5f,
-                    endY - uy * arrowSize - ux * arrowSize * 0.5f)
+                lineTo(
+                    endX - ux * arrowSize + uy * arrowSize * 0.5f,
+                    endY - uy * arrowSize - ux * arrowSize * 0.5f
+                )
                 close()
             }
             drawPath(path, EDGE_COLOR, style = Fill)
@@ -616,7 +645,10 @@ private fun DrawScope.drawFlowEdge(
         val bgPad = 3f
         drawRoundRect(
             Color.White,
-            topLeft = Offset(midX - textResult.size.width / 2f - bgPad, midY - textResult.size.height / 2f - bgPad),
+            topLeft = Offset(
+                midX - textResult.size.width / 2f - bgPad,
+                midY - textResult.size.height / 2f - bgPad
+            ),
             size = Size(textResult.size.width + bgPad * 2f, textResult.size.height + bgPad * 2f),
             cornerRadius = CornerRadius(3f),
         )

@@ -2,6 +2,7 @@ package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -11,12 +12,12 @@ import com.hrm.markdown.parser.ast.Paragraph
 import com.hrm.markdown.parser.ast.Text
 import com.hrm.markdown.ui.LocalImageRenderer
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.MarkdownImageFrame
 import com.hrm.markdown.ui.inline.buildInlineAnnotatedString
 import com.hrm.markdown.ui.inline.rememberInlineContent
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
  * 段落渲染器。
@@ -94,7 +95,7 @@ private fun MixedParagraphRenderer(
         for (segment in segments) {
             when (segment) {
                 is ParagraphSegment.TextRun -> {
-                    val inlineContents = mutableMapOf<String, androidx.compose.foundation.text.InlineTextContent>()
+                    val inlineContents = mutableMapOf<String, InlineTextContent>()
                     val annotated = buildInlineAnnotatedString(
                         segment.nodes,
                         theme,
