@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import com.hrm.markdown.parser.ast.ListBlock
 import com.hrm.markdown.parser.ast.ListItem
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
 
 /**

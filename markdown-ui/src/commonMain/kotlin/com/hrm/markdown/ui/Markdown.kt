@@ -2,9 +2,7 @@ package com.hrm.markdown.ui
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -21,9 +19,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import com.hrm.markdown.parser.MarkdownParser
 import com.hrm.markdown.parser.ast.BlankLine
 import com.hrm.markdown.parser.ast.ContainerNode
@@ -34,7 +30,10 @@ import com.hrm.markdown.ui.block.BlockRenderer
 import com.hrm.markdown.ui.block.blockRenderRevision
 import com.hrm.markdown.ui.extension.DefaultExtensionProvider
 import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.MarkdownTheme
 import com.hrm.markdown.ui.theme.MarkdownThemeDefaults
+import com.hrm.markdown.ui.theme.ProvideMarkdownTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext

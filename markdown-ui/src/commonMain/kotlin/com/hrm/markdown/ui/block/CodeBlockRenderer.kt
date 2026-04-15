@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import com.hrm.markdown.parser.ast.FencedCodeBlock
 import com.hrm.markdown.parser.ast.IndentedCodeBlock
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
  * 围栏代码块渲染器 (``` 或 ~~~)

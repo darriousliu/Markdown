@@ -1,6 +1,6 @@
 package com.hrm.markdown.ui.inline
 
-import com.hrm.markdown.ui.MarkdownTheme
+import com.hrm.markdown.ui.theme.MarkdownTheme
 
 internal val MarkdownTheme.bodyStyle
     get() = paragraph.textStyle

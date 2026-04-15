@@ -74,8 +74,8 @@ import com.hrm.markdown.parser.ast.Superscript
 import com.hrm.markdown.parser.ast.Text
 import com.hrm.markdown.parser.ast.WikiLink
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.LocalMarkdownTheme
-import com.hrm.markdown.ui.MarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.MarkdownTheme
 import com.hrm.markdown.ui.extension.InlineExtensionSlot
 import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
 

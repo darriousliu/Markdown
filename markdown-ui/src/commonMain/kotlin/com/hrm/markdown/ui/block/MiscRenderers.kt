@@ -14,7 +14,7 @@ import com.hrm.markdown.parser.ast.DefinitionList
 import com.hrm.markdown.parser.ast.DefinitionTerm
 import com.hrm.markdown.parser.ast.FootnoteDefinition
 import com.hrm.markdown.parser.ast.HtmlBlock
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
 import com.hrm.markdown.ui.inline.rememberInlineContent
 

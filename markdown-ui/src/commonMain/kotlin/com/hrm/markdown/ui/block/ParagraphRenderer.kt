@@ -11,7 +11,7 @@ import com.hrm.markdown.parser.ast.Paragraph
 import com.hrm.markdown.parser.ast.Text
 import com.hrm.markdown.ui.LocalImageRenderer
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.MarkdownImageFrame

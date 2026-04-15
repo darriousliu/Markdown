@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.hrm.markdown.parser.ast.ColumnItem
 import com.hrm.markdown.parser.ast.ColumnsLayout
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
 
 /**

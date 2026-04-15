@@ -15,9 +15,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import com.hrm.markdown.parser.ast.Admonition
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
-import com.hrm.markdown.ui.ProvideMarkdownTheme
+import com.hrm.markdown.ui.theme.ProvideMarkdownTheme
 
 /**
  * Admonition 渲染器 (> [!NOTE], > [!WARNING] 等)。

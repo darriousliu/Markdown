@@ -18,7 +18,7 @@ import com.hrm.markdown.parser.ast.TableBody
 import com.hrm.markdown.parser.ast.TableCell
 import com.hrm.markdown.parser.ast.TableHead
 import com.hrm.markdown.parser.ast.TableRow
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.inline.rememberInlineContent
 import com.hrm.markdown.ui.theme.TableCellVerticalAlignment

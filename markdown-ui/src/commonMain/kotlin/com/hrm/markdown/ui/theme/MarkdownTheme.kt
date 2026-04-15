@@ -1,7 +1,10 @@
 package com.hrm.markdown.ui.theme
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
@@ -724,3 +727,18 @@ private fun defaultAdmonitionStyles(): Map<String, AdmonitionStyle> = mapOf(
         titleColor = Color(0xFFCF222E),
     ),
 )
+
+internal val LocalMarkdownTheme = compositionLocalOf { MarkdownTheme() }
+
+/**
+ * 提供 Markdown 主题到组件树。
+ */
+@Composable
+internal fun ProvideMarkdownTheme(
+    theme: MarkdownTheme = MarkdownTheme(),
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(LocalMarkdownTheme provides theme) {
+        content()
+    }
+}

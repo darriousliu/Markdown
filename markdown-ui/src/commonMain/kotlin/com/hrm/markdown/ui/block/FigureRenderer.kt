@@ -13,7 +13,7 @@ import androidx.compose.ui.text.font.FontStyle
 import com.hrm.markdown.parser.ast.Figure
 import com.hrm.markdown.ui.LocalImageRenderer
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.MarkdownImageFrame
 import com.hrm.markdown.ui.theme.FigureContentAlignment

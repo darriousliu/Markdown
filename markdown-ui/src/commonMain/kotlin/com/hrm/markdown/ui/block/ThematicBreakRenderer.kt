@@ -3,7 +3,7 @@ package com.hrm.markdown.ui.block
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
  * 水平分割线渲染器 (---, ***, ___)

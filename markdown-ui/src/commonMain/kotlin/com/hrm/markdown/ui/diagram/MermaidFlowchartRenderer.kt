@@ -23,8 +23,8 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import com.hrm.markdown.ui.MarkdownTheme
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.MarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import kotlin.math.max
 
 // ─── Data Model ───

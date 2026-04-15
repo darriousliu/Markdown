@@ -9,7 +9,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import com.hrm.markdown.parser.ast.*
-import com.hrm.markdown.ui.LocalMarkdownTheme
+import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalRendererDocument
 
 private fun List<IntRange>.flattenLineNumbers(): Set<Int> = buildSet {
