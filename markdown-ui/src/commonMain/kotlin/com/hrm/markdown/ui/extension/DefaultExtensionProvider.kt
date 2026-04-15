@@ -22,8 +22,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hrm.markdown.parser.ast.CustomContainer
 import com.hrm.markdown.parser.ast.DiagramBlock
 import com.hrm.markdown.parser.ast.FencedCodeBlock
@@ -40,6 +38,7 @@ import com.hrm.markdown.ui.diagram.MermaidFlowchartDiagram
 import com.hrm.markdown.ui.diagram.MermaidSequenceDiagram
 import com.hrm.markdown.ui.diagram.PlantUMLSequenceDiagram
 import com.hrm.markdown.ui.theme.CodeBlockStyle
+import com.hrm.markdown.ui.theme.FigureContentAlignment
 import com.hrm.markdown.ui.theme.FigureStyle
 import com.hrm.markdown.ui.theme.ImageStyle
 import com.hrm.markdown.ui.theme.MarkdownTheme
@@ -103,14 +102,14 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         modifier: Modifier,
     ) {
         Column(
-            modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = modifier.padding(theme.pageBreak.containerPadding),
+            verticalArrangement = Arrangement.spacedBy(theme.pageBreak.itemSpacing),
         ) {
             HorizontalDivider(theme.thematicBreak, Modifier)
             BasicText(
                 text = "Page Break",
-                style = theme.paragraph.textStyle.copy(
-                    fontSize = 10.sp,
+                modifier = Modifier.padding(bottom = theme.pageBreak.titleBottomPadding),
+                style = theme.pageBreak.titleTextStyle ?: theme.paragraph.textStyle.copy(
                     fontWeight = FontWeight.Medium,
                 ),
             )
@@ -192,15 +191,20 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
                 modifier = Modifier
                     .width(style.defaultWidth)
                     .height(style.defaultHeight)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius))
-                    .background(style.background)
-                    .border(style.borderWidth, style.borderColor, androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius)),
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.frame.cornerRadius))
+                    .background(style.frame.background)
+                    .border(
+                        style.frame.borderWidth,
+                        style.frame.borderColor,
+                        androidx.compose.foundation.shape.RoundedCornerShape(style.frame.cornerRadius),
+                    )
+                    .padding(style.frame.padding),
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = altText.ifEmpty { node.destination },
                     modifier = Modifier.padding(style.contentPadding),
-                    style = style.captionTextStyle.copy(textAlign = style.captionTextAlign),
+                    style = style.placeholderTextStyle.copy(textAlign = style.caption.textAlign),
                 )
             }
         }
@@ -212,24 +216,38 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         style: FigureStyle,
         modifier: Modifier,
     ) {
-        Column(modifier = modifier) {
+        val figureShape = RoundedCornerShape(style.container.cornerRadius)
+        Column(
+            modifier = modifier
+                .clip(figureShape)
+                .background(style.container.background)
+                .border(style.container.borderWidth, style.container.borderColor, figureShape)
+                .padding(style.container.padding),
+            horizontalAlignment = when (style.contentAlignment) {
+                FigureContentAlignment.Start -> Alignment.Start
+                FigureContentAlignment.Center -> Alignment.CenterHorizontally
+                FigureContentAlignment.End -> Alignment.End
+            },
+        ) {
             Box(
                 modifier = Modifier
-                    .background(Color(0x14000000))
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                    .background(Color(0x14000000)),
             ) {
                 BasicText(
                     text = "[image] ${node.imageUrl}",
-                    style = TextStyle(fontSize = 13.sp, textAlign = style.captionTextAlign),
+                    style = style.caption.textStyle.copy(
+                        textAlign = style.caption.textAlign,
+                        fontStyle = FontStyle.Normal,
+                    ),
                 )
             }
             if (node.caption.isNotEmpty()) {
                 BasicText(
                     text = node.caption,
-                    modifier = Modifier.padding(top = style.captionTopPadding),
-                    style = style.captionTextStyle.copy(
-                        fontStyle = if (style.captionItalic) FontStyle.Italic else FontStyle.Normal,
-                        textAlign = style.captionTextAlign,
+                    modifier = Modifier.padding(top = style.caption.topPadding),
+                    style = style.caption.textStyle.copy(
+                        fontStyle = if (style.caption.italic) FontStyle.Italic else FontStyle.Normal,
+                        textAlign = style.caption.textAlign,
                     ),
                 )
             }

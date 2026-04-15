@@ -27,7 +27,10 @@ object MarkdownThemeDefaults {
             ),
             blockQuote = BlockQuoteStyle(
                 borderColor = Color(0xFF3D444D),
-                textColor = Color(0xFF9198A1),
+                color = Color(0xFF9198A1),
+            ),
+            bibliography = BibliographyStyle(
+                background = Color(0xFF161B22),
             ),
             codeBlock = CodeBlockStyle(
                 textStyle = TextStyle(
@@ -96,31 +99,31 @@ private fun darkHeadingTextStyles(color: Color): List<TextStyle> = listOf(
 private fun darkAdmonitionStyles(): Map<String, AdmonitionStyle> = mapOf(
     "NOTE" to AdmonitionStyle(
         borderColor = Color(0xFF4493F8),
-        backgroundColor = Color(0xFF0D1D30),
+        background = Color(0xFF0D1D30),
         iconText = "ℹ️",
         titleColor = Color(0xFF4493F8),
     ),
     "TIP" to AdmonitionStyle(
         borderColor = Color(0xFF3FB950),
-        backgroundColor = Color(0xFF0D2818),
+        background = Color(0xFF0D2818),
         iconText = "💡",
         titleColor = Color(0xFF3FB950),
     ),
     "IMPORTANT" to AdmonitionStyle(
         borderColor = Color(0xFFAB7DF8),
-        backgroundColor = Color(0xFF1B1030),
+        background = Color(0xFF1B1030),
         iconText = "❗",
         titleColor = Color(0xFFAB7DF8),
     ),
     "WARNING" to AdmonitionStyle(
         borderColor = Color(0xFFD29922),
-        backgroundColor = Color(0xFF2A1F00),
+        background = Color(0xFF2A1F00),
         iconText = "⚠️",
         titleColor = Color(0xFFD29922),
     ),
     "CAUTION" to AdmonitionStyle(
         borderColor = Color(0xFFF85149),
-        backgroundColor = Color(0xFF300C0C),
+        background = Color(0xFF300C0C),
         iconText = "🔴",
         titleColor = Color(0xFFF85149),
     ),

@@ -2,14 +2,12 @@ package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.*
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalRendererDocument
@@ -142,13 +140,13 @@ internal fun TocPlaceholderRenderer(
     if (headings.isEmpty()) return
 
     Column(
-        modifier = modifier.padding(vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = modifier.padding(theme.tableOfContentsPadding),
+        verticalArrangement = Arrangement.spacedBy(theme.tableOfContentsItemSpacing),
     ) {
         BasicText(
             text = "Table of Contents",
-            style = theme.headingStyles.getOrElse(2) { theme.bodyStyle },
-            modifier = Modifier.padding(bottom = 4.dp),
+            style = theme.tableOfContentsTitleTextStyle ?: theme.headingStyles.getOrElse(2) { theme.bodyStyle },
+            modifier = Modifier.padding(bottom = theme.tableOfContentsTitleBottomPadding),
         )
         for ((text, level, _) in headings) {
             val adjustedLevel = (level - node.minDepth).coerceAtLeast(0)
@@ -158,7 +156,7 @@ internal fun TocPlaceholderRenderer(
                     color = theme.linkColor,
                     fontStyle = FontStyle.Normal,
                 ),
-                modifier = Modifier.padding(start = adjustedLevel.dp * 12),
+                modifier = Modifier.padding(start = theme.tableOfContentsIndentUnit * adjustedLevel),
             )
         }
     }
@@ -194,7 +192,7 @@ private fun collectHeadingsRecursive(node: Node, result: MutableList<HeadingInfo
 }
 
 private fun extractText(node: Node): String = when (node) {
-    is com.hrm.markdown.parser.ast.Text -> node.literal
+    is Text -> node.literal
     is InlineCode -> node.literal
     is EscapedChar -> node.literal
     is HtmlEntity -> node.resolved.ifEmpty { node.literal }

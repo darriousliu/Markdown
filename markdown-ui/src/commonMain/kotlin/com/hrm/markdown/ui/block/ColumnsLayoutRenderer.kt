@@ -2,12 +2,11 @@ package com.hrm.markdown.ui.block
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.ColumnItem
 import com.hrm.markdown.parser.ast.ColumnsLayout
+import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
 
 /**
@@ -20,12 +19,13 @@ internal fun ColumnsLayoutRenderer(
     node: ColumnsLayout,
     modifier: Modifier = Modifier,
 ) {
+    val theme = LocalMarkdownTheme.current
     val columns = node.children.filterIsInstance<ColumnItem>()
     if (columns.isEmpty()) return
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(theme.columnsGap),
     ) {
         for (column in columns) {
             val weight = parseWeight(column.width, columns.size)

@@ -16,11 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hrm.markdown.ui.LocalMarkdownTheme
 
 /**
@@ -37,28 +33,24 @@ internal fun DiagramFallback(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(theme.codeBlockCornerRadius))
-            .background(Color(0xFFF0F4F8))
+            .background(theme.diagramFallbackBackground)
             .padding(theme.codeBlockPadding),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp),
+            modifier = Modifier.padding(bottom = theme.diagramFallbackTitleBottomPadding),
         ) {
             BasicText(
                 text = "📊",
-                modifier = Modifier.padding(end = 6.dp),
+                modifier = Modifier.padding(end = theme.diagramFallbackIconEndPadding),
             )
             BasicText(
                 text = "$typeName Diagram",
-                style = theme.bodyStyle.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = Color(0xFF57606A),
-                ),
+                style = theme.diagramFallbackTitleTextStyle,
             )
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(theme.diagramFallbackSpacerHeight))
 
         Box(
             modifier = Modifier

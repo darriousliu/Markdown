@@ -56,7 +56,9 @@ internal fun BlockQuoteRenderer(
             }
             .padding(
                 PaddingValues(
-                    start = contentPadding.calculateLeftPadding(layoutDirection) + theme.blockQuoteBorderWidth,
+                    start = contentPadding.calculateLeftPadding(layoutDirection) +
+                        theme.blockQuoteBorderWidth +
+                        theme.blockQuoteBorderContentSpacing,
                     top = contentPadding.calculateTopPadding(),
                     end = contentPadding.calculateRightPadding(layoutDirection),
                     bottom = contentPadding.calculateBottomPadding(),

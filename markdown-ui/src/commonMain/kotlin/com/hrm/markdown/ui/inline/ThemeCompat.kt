@@ -23,6 +23,12 @@ internal val MarkdownTheme.inlineCodeBorderColor
 internal val MarkdownTheme.inlineCodeBorderWidth
     get() = inlineCode.borderWidth
 
+internal val MarkdownTheme.inlineCodePlaceholderVerticalAlign
+    get() = inlineCode.placeholderVerticalAlign
+
+internal val MarkdownTheme.inlineCodeContentVerticalAlignment
+    get() = inlineCode.contentVerticalAlignment
+
 internal val MarkdownTheme.emphasisStyle
     get() = emphasis.textStyle
 
@@ -82,6 +88,12 @@ internal val MarkdownTheme.kbdBorderColor
 
 internal val MarkdownTheme.kbdBorderWidth
     get() = kbd.borderWidth
+
+internal val MarkdownTheme.kbdPlaceholderVerticalAlign
+    get() = kbd.placeholderVerticalAlign
+
+internal val MarkdownTheme.kbdContentVerticalAlignment
+    get() = kbd.contentVerticalAlignment
 
 internal val MarkdownTheme.spoilerColor
     get() = spoiler.background

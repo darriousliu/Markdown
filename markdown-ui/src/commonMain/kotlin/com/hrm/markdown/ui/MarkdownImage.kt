@@ -102,7 +102,7 @@ internal fun DefaultMarkdownImage(
     ) {
         BasicText(
             text = data.altText.ifEmpty { data.title ?: data.url },
-            style = theme.image.captionTextStyle.copy(textAlign = theme.image.captionTextAlign),
+            style = theme.image.placeholderTextStyle.copy(textAlign = theme.image.caption.textAlign),
         )
     }
 }
@@ -114,15 +114,15 @@ internal fun MarkdownImageFrame(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val shape = RoundedCornerShape(style.cornerRadius)
+    val shape = RoundedCornerShape(style.frame.cornerRadius)
 
     Box(
         modifier = modifier
             .applyImageSize(data.width, data.height)
             .clip(shape)
-            .background(style.background)
-            .border(style.borderWidth, style.borderColor, shape)
-            .padding(vertical = 4.dp)
+            .background(style.frame.background)
+            .border(style.frame.borderWidth, style.frame.borderColor, shape)
+            .padding(style.frame.padding)
             .padding(style.contentPadding),
         contentAlignment = Alignment.Center,
     ) {

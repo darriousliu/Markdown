@@ -42,8 +42,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.TextUnitType
 import com.hrm.markdown.parser.ast.Abbreviation
 import com.hrm.markdown.parser.ast.Autolink
 import com.hrm.markdown.parser.ast.CitationReference
@@ -234,6 +233,8 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 padding = theme.inlineCodePadding,
                 borderColor = theme.inlineCodeBorderColor,
                 borderWidth = theme.inlineCodeBorderWidth,
+                placeholderVerticalAlign = theme.inlineCodePlaceholderVerticalAlign,
+                contentVerticalAlignment = theme.inlineCodeContentVerticalAlignment,
                 inlineContents = inlineContents,
                 density = density,
                 layoutDirection = layoutDirection,
@@ -398,6 +399,8 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 padding = theme.kbdPadding,
                 borderColor = theme.kbdBorderColor,
                 borderWidth = theme.kbdBorderWidth,
+                placeholderVerticalAlign = theme.kbdPlaceholderVerticalAlign,
+                contentVerticalAlignment = theme.kbdContentVerticalAlignment,
                 inlineContents = inlineContents,
                 density = density,
                 layoutDirection = layoutDirection,
@@ -425,8 +428,8 @@ private fun AnnotatedString.Builder.renderInlineNode(
             val avgCharWidth = plainText.sumOf { ch ->
                 if (ch.code > 0x7F) 12 else 7
             }.toFloat() / 10f * (fontSize / 16f)
-            val placeholderWidth = (avgCharWidth + 8f).sp
-            val placeholderHeight = (fontSize * 1.5f).sp
+            val placeholderWidth = spTextUnit(avgCharWidth + 8f)
+            val placeholderHeight = spTextUnit(fontSize * 1.5f)
 
             appendInlineContent(id, plainText)
             inlineContents[id] = InlineTextContent(
@@ -497,8 +500,8 @@ private fun AnnotatedString.Builder.renderInlineNode(
             val baseWidth = node.base.sumOf { ch ->
                 if (ch.code > 0x7F) 12 else 7
             }.toFloat() / 10f * (fontSize / 16f)
-            val placeholderWidth = (baseWidth + 2f).sp
-            val placeholderHeight = (fontSize * 2.0f).sp
+            val placeholderWidth = spTextUnit(baseWidth + 2f)
+            val placeholderHeight = spTextUnit(fontSize * 2.0f)
 
             appendInlineContent(id, node.base)
             inlineContents[id] = InlineTextContent(
@@ -533,6 +536,8 @@ private fun AnnotatedString.Builder.appendStyledInlineChip(
     padding: PaddingValues,
     borderColor: Color?,
     borderWidth: Dp,
+    placeholderVerticalAlign: PlaceholderVerticalAlign,
+    contentVerticalAlignment: com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment,
     inlineContents: MutableMap<String, InlineTextContent>,
     density: Density?,
     layoutDirection: LayoutDirection?,
@@ -553,7 +558,7 @@ private fun AnnotatedString.Builder.appendStyledInlineChip(
         placeholder = Placeholder(
             width = width,
             height = height,
-            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+            placeholderVerticalAlign = placeholderVerticalAlign,
         ),
     ) {
         InlineChipContent(
@@ -564,6 +569,7 @@ private fun AnnotatedString.Builder.appendStyledInlineChip(
             padding = padding,
             borderColor = borderColor,
             borderWidth = borderWidth,
+            contentVerticalAlignment = contentVerticalAlignment,
         )
     }
 }
@@ -593,8 +599,8 @@ private fun measureInlineChipPlaceholder(
 
     val fontSize = resolvedTextStyle.fontSize.takeIf { it != TextUnit.Unspecified }?.value ?: 14f
     val avgCharWidth = text.sumOf { if (it.code > 0x7F) 12 else 7 }.toFloat() / 10f * (fontSize / 16f)
-    return (avgCharWidth + fontSize * 0.2f + horizontalPadding.value).sp to
-        (fontSize * 1.35f + verticalPadding.value).sp
+    return spTextUnit(avgCharWidth + fontSize * 0.2f + horizontalPadding.value) to
+        spTextUnit(fontSize * 1.35f + verticalPadding.value)
 }
 
 private fun resolveLinkStyle(style: SpanStyle, fallbackColor: Color): SpanStyle =
@@ -628,19 +634,24 @@ private fun InlineChipContent(
     padding: PaddingValues,
     borderColor: Color?,
     borderWidth: Dp,
+    contentVerticalAlignment: com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     var chipModifier = Modifier
         .clip(shape)
         .background(background)
 
-    if (borderColor != null && borderWidth > 0.dp) {
+    if (borderColor != null && borderWidth.value > 0f) {
         chipModifier = chipModifier.border(borderWidth, borderColor, shape)
     }
 
     Box(
         modifier = chipModifier.padding(padding),
-        contentAlignment = Alignment.CenterStart,
+        contentAlignment = when (contentVerticalAlignment) {
+            com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment.Top -> Alignment.TopStart
+            com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment.Center -> Alignment.CenterStart
+            com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment.Bottom -> Alignment.BottomStart
+        },
     ) {
         BasicText(
             text = text,
@@ -648,6 +659,8 @@ private fun InlineChipContent(
         )
     }
 }
+
+private fun spTextUnit(value: Float): TextUnit = TextUnit(value, TextUnitType.Sp)
 
 /**
  * 简易 CSS style 字符串转 SpanStyle。

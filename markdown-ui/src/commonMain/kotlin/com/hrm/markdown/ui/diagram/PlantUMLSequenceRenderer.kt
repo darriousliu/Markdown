@@ -3,7 +3,6 @@ package com.hrm.markdown.ui.diagram
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -26,8 +25,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.hrm.markdown.ui.MarkdownTheme
+import com.hrm.markdown.ui.LocalMarkdownTheme
 import kotlin.math.max
 
 // ─── Data Model ───
@@ -93,7 +92,7 @@ internal fun parsePlantUMLSequence(code: String): SequenceDiagramData? {
         }
 
         // Messages: A -> B : label
-        val msgMatch = Regex("""^(.+?)\s*(-->>|->(?:>)?|-->|<--(?:<)?|<-(?:<)?)\s*(.+?)\s*:\s*(.*)$""").find(line)
+        val msgMatch = Regex("""^(.+?)\s*(-->>|->>?|-->|<--<?|<-<?)\s*(.+?)\s*:\s*(.*)$""").find(line)
         if (msgMatch != null) {
             val rawFrom = msgMatch.groupValues[1].trim()
             val arrow = msgMatch.groupValues[2].trim()
@@ -213,11 +212,12 @@ private fun calculatePartCenterXs(
 internal fun DrawScope.drawSequenceDiagram(
     data: SequenceDiagramData,
     textMeasurer: TextMeasurer,
+    theme: MarkdownTheme,
 ) {
     if (data.participants.isEmpty()) return
 
     val measureText: (String) -> Pair<Float, Float> = { text ->
-        val result = textMeasurer.measure(text, style = TextStyle(fontSize = 13.sp))
+        val result = textMeasurer.measure(text, style = theme.diagramNodeLabelTextStyle)
         Pair(result.size.width.toFloat(), result.size.height.toFloat())
     }
 
@@ -225,7 +225,7 @@ internal fun DrawScope.drawSequenceDiagram(
     val partMeasures = data.participants.map { p ->
         val result = textMeasurer.measure(
             p.label,
-            style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium),
+            style = theme.diagramNodeLabelTextStyle.merge(TextStyle(fontWeight = FontWeight.Medium)),
         )
         Triple(p, result.size.width.toFloat(), result.size.height.toFloat())
     }
@@ -263,7 +263,7 @@ internal fun DrawScope.drawSequenceDiagram(
         val w = partWidths[i]
 
         if (p.type == ParticipantType.ACTOR) {
-            drawActor(cx, boxY, partHeight, textMeasurer, p.label)
+            drawActor(cx, boxY, partHeight, textMeasurer, p.label, theme)
         } else {
             val bx = cx - w / 2
             drawRoundRect(
@@ -282,7 +282,9 @@ internal fun DrawScope.drawSequenceDiagram(
 
             val labelResult = textMeasurer.measure(
                 p.label,
-                style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1F2937)),
+                style = theme.diagramNodeLabelTextStyle.merge(
+                    TextStyle(fontWeight = FontWeight.Medium, color = Color(0xFF1F2937))
+                ),
             )
             drawText(
                 labelResult,
@@ -298,7 +300,7 @@ internal fun DrawScope.drawSequenceDiagram(
         val w = partWidths[i]
 
         if (p.type == ParticipantType.ACTOR) {
-            drawActor(cx, lifelineEndY, partHeight, textMeasurer, p.label)
+            drawActor(cx, lifelineEndY, partHeight, textMeasurer, p.label, theme)
         } else {
             val bx = cx - w / 2
             drawRoundRect(
@@ -317,7 +319,9 @@ internal fun DrawScope.drawSequenceDiagram(
 
             val labelResult = textMeasurer.measure(
                 p.label,
-                style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1F2937)),
+                style = theme.diagramNodeLabelTextStyle.merge(
+                    TextStyle(fontWeight = FontWeight.Medium, color = Color(0xFF1F2937))
+                ),
             )
             drawText(
                 labelResult,
@@ -366,7 +370,7 @@ internal fun DrawScope.drawSequenceDiagram(
         if (msg.label.isNotBlank()) {
             val labelResult = textMeasurer.measure(
                 msg.label,
-                style = TextStyle(fontSize = 12.sp, color = MSG_LABEL_COLOR),
+                style = theme.diagramEdgeLabelTextStyle.merge(TextStyle(color = MSG_LABEL_COLOR)),
             )
             val midX = (fromX + toX) / 2
             drawText(
@@ -383,6 +387,7 @@ private fun DrawScope.drawActor(
     totalHeight: Float,
     textMeasurer: TextMeasurer,
     label: String,
+    theme: MarkdownTheme,
 ) {
     // Stick figure actor
     val headR = 10f
@@ -403,7 +408,7 @@ private fun DrawScope.drawActor(
     // Label
     val labelResult = textMeasurer.measure(
         label,
-        style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF1F2937)),
+        style = theme.diagramActorLabelTextStyle.merge(TextStyle(color = Color(0xFF1F2937))),
     )
     drawText(
         labelResult,
@@ -459,12 +464,13 @@ internal fun SequenceDiagramRenderer(
     data: SequenceDiagramData,
     modifier: Modifier = Modifier,
 ) {
+    val theme = LocalMarkdownTheme.current
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
 
     val canvasSize = remember(data) {
         calculateSequenceDiagramSize(data) { text ->
-            val result = textMeasurer.measure(text, style = TextStyle(fontSize = 13.sp))
+            val result = textMeasurer.measure(text, style = theme.diagramNodeLabelTextStyle)
             Pair(result.size.width.toFloat(), result.size.height.toFloat())
         }
     }
@@ -478,11 +484,11 @@ internal fun SequenceDiagramRenderer(
     ) {
         Canvas(
             modifier = Modifier
-                .width(canvasWidthDp + 8.dp)
-                .height(canvasHeightDp + 8.dp)
-                .padding(4.dp),
+                .width(canvasWidthDp + theme.diagramCanvasInset)
+                .height(canvasHeightDp + theme.diagramCanvasInset)
+                .padding(theme.diagramCanvasPadding),
         ) {
-            drawSequenceDiagram(data, textMeasurer)
+            drawSequenceDiagram(data, textMeasurer, theme)
         }
     }
 }

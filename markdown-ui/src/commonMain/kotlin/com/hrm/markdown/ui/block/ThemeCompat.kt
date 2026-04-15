@@ -29,14 +29,17 @@ internal val MarkdownTheme.blockQuoteBorderColor
 internal val MarkdownTheme.blockQuoteBorderWidth
     get() = blockQuote.borderWidth
 
+internal val MarkdownTheme.blockQuoteBorderContentSpacing
+    get() = blockQuote.borderContentSpacing
+
 internal val MarkdownTheme.blockQuotePadding
     get() = blockQuote.contentPadding
 
 internal val MarkdownTheme.blockQuoteTextColor
-    get() = blockQuote.textColor
+    get() = blockQuote.color
 
 internal val MarkdownTheme.blockQuoteBackground
-    get() = blockQuote.backgroundColor
+    get() = blockQuote.background
 
 internal val MarkdownTheme.blockQuoteCornerRadius
     get() = blockQuote.cornerRadius
@@ -52,6 +55,57 @@ internal val MarkdownTheme.dividerThickness
 
 internal val MarkdownTheme.blockSpacing
     get() = document.blockSpacing
+
+internal val MarkdownTheme.tableOfContentsPadding
+    get() = tableOfContents.section.containerPadding
+
+internal val MarkdownTheme.tableOfContentsItemSpacing
+    get() = tableOfContents.section.itemSpacing
+
+internal val MarkdownTheme.tableOfContentsTitleTextStyle
+    get() = tableOfContents.section.titleTextStyle
+
+internal val MarkdownTheme.tableOfContentsTitleBottomPadding
+    get() = tableOfContents.section.titleBottomPadding
+
+internal val MarkdownTheme.tableOfContentsIndentUnit
+    get() = tableOfContents.indentUnit
+
+internal val MarkdownTheme.columnsGap
+    get() = columnsLayout.columnSpacing
+
+internal val MarkdownTheme.bibliographyCornerRadius
+    get() = bibliography.cornerRadius
+
+internal val MarkdownTheme.bibliographyBackground
+    get() = bibliography.background
+
+internal val MarkdownTheme.bibliographyPadding
+    get() = bibliography.section.containerPadding
+
+internal val MarkdownTheme.bibliographyTitleTextStyle
+    get() = bibliography.section.titleTextStyle
+
+internal val MarkdownTheme.bibliographyTitleBottomPadding
+    get() = bibliography.section.titleBottomPadding
+
+internal val MarkdownTheme.bibliographyItemSpacing
+    get() = bibliography.section.itemSpacing
+
+internal val MarkdownTheme.bibliographyItemPadding
+    get() = bibliography.itemPadding
+
+internal val MarkdownTheme.pageBreakSpacing
+    get() = pageBreak.itemSpacing
+
+internal val MarkdownTheme.pageBreakPadding
+    get() = pageBreak.containerPadding
+
+internal val MarkdownTheme.pageBreakLabelTextStyle
+    get() = pageBreak.titleTextStyle
+
+internal val MarkdownTheme.pageBreakLabelBottomPadding
+    get() = pageBreak.titleBottomPadding
 
 internal val MarkdownTheme.listIndent
     get() = list.indent
@@ -101,6 +155,12 @@ internal val MarkdownTheme.tableCellVerticalAlignment
 internal val MarkdownTheme.tableHeaderVerticalAlignment
     get() = table.headerVerticalAlignment
 
+internal val MarkdownTheme.tableCellTextAlign
+    get() = table.cellTextAlign
+
+internal val MarkdownTheme.tableHeaderTextAlign
+    get() = table.headerTextAlign
+
 internal val MarkdownTheme.linkColor
     get() = link.textStyle.color
 
@@ -112,6 +172,15 @@ internal val MarkdownTheme.taskUncheckedColor
 
 internal val MarkdownTheme.taskUncheckedBackgroundColor
     get() = taskList.uncheckedBackgroundColor
+
+internal val MarkdownTheme.taskCheckedBackgroundColor
+    get() = taskList.checkedBackgroundColor
+
+internal val MarkdownTheme.taskCheckedBorderColor
+    get() = taskList.checkedBorderColor
+
+internal val MarkdownTheme.taskUncheckedBorderColor
+    get() = taskList.uncheckedBorderColor
 
 internal val MarkdownTheme.taskCornerRadius
     get() = taskList.cornerRadius
@@ -190,3 +259,51 @@ internal val MarkdownTheme.definitionListDescriptionIndent
 
 internal val MarkdownTheme.definitionListItemSpacing
     get() = definitionList.itemSpacing
+
+internal val MarkdownTheme.diagramFallbackBackground
+    get() = diagram.fallbackBackground
+
+internal val MarkdownTheme.diagramFallbackTitleTextStyle
+    get() = diagram.fallbackTitleTextStyle
+
+internal val MarkdownTheme.diagramFallbackTitleBottomPadding
+    get() = diagram.fallbackTitleBottomPadding
+
+internal val MarkdownTheme.diagramFallbackIconEndPadding
+    get() = diagram.fallbackIconEndPadding
+
+internal val MarkdownTheme.diagramFallbackSpacerHeight
+    get() = diagram.fallbackSpacerHeight
+
+internal val MarkdownTheme.diagramNodeLabelTextStyle
+    get() = diagram.nodeLabelTextStyle
+
+internal val MarkdownTheme.diagramEdgeLabelTextStyle
+    get() = diagram.edgeLabelTextStyle
+
+internal val MarkdownTheme.diagramActorLabelTextStyle
+    get() = diagram.actorLabelTextStyle
+
+internal val MarkdownTheme.diagramCanvasInset
+    get() = diagram.canvasInset
+
+internal val MarkdownTheme.diagramCanvasPadding
+    get() = diagram.canvasPadding
+
+internal val MarkdownTheme.figureBackground
+    get() = figure.container.background
+
+internal val MarkdownTheme.figureBorderColor
+    get() = figure.container.borderColor
+
+internal val MarkdownTheme.figureBorderWidth
+    get() = figure.container.borderWidth
+
+internal val MarkdownTheme.figureCornerRadius
+    get() = figure.container.cornerRadius
+
+internal val MarkdownTheme.figurePadding
+    get() = figure.container.padding
+
+internal val MarkdownTheme.figureContentAlignment
+    get() = figure.contentAlignment

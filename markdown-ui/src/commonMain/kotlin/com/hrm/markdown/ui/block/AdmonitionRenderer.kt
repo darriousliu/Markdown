@@ -41,7 +41,7 @@ internal fun AdmonitionRenderer(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(theme.admonitionCornerRadius))
-            .background(style.backgroundColor)
+            .background(style.background)
             .drawBehind {
                 drawLine(
                     color = style.borderColor,

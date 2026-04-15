@@ -1,10 +1,14 @@
 package com.hrm.markdown.ui.block
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import com.hrm.markdown.parser.ast.Figure
 import com.hrm.markdown.ui.LocalImageRenderer
@@ -12,6 +16,7 @@ import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.MarkdownImageFrame
+import com.hrm.markdown.ui.theme.FigureContentAlignment
 
 /**
  * Figure 渲染器：将 Figure 节点渲染为图片 + 标题（figcaption）。
@@ -26,7 +31,19 @@ internal fun FigureRenderer(
     val theme = LocalMarkdownTheme.current
     val imageRenderer = LocalImageRenderer.current
     if (imageRenderer != null) {
-        Column(modifier = modifier) {
+        val figureShape = RoundedCornerShape(theme.figureCornerRadius)
+        Column(
+            modifier = modifier
+                .clip(figureShape)
+                .background(theme.figureBackground)
+                .border(theme.figureBorderWidth, theme.figureBorderColor, figureShape)
+                .padding(theme.figurePadding),
+            horizontalAlignment = when (theme.figureContentAlignment) {
+                FigureContentAlignment.Start -> androidx.compose.ui.Alignment.Start
+                FigureContentAlignment.Center -> androidx.compose.ui.Alignment.CenterHorizontally
+                FigureContentAlignment.End -> androidx.compose.ui.Alignment.End
+            },
+        ) {
             val imageData = MarkdownImageData(
                 url = node.imageUrl,
                 altText = node.caption,
@@ -44,10 +61,10 @@ internal fun FigureRenderer(
             if (node.caption.isNotEmpty()) {
                 BasicText(
                     text = node.caption,
-                    modifier = Modifier.padding(top = theme.figure.captionTopPadding),
-                    style = theme.figure.captionTextStyle.copy(
-                        fontStyle = if (theme.figure.captionItalic) FontStyle.Italic else FontStyle.Normal,
-                        textAlign = theme.figure.captionTextAlign,
+                    modifier = Modifier.padding(top = theme.figure.caption.topPadding),
+                    style = theme.figure.caption.textStyle.copy(
+                        fontStyle = if (theme.figure.caption.italic) FontStyle.Italic else FontStyle.Normal,
+                        textAlign = theme.figure.caption.textAlign,
                     ),
                 )
             }

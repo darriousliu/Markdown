@@ -3,7 +3,6 @@ package com.hrm.markdown.ui.diagram
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -24,8 +23,8 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.hrm.markdown.ui.MarkdownTheme
+import com.hrm.markdown.ui.LocalMarkdownTheme
 import kotlin.math.max
 
 // ─── Data Model ───
@@ -113,12 +112,12 @@ internal fun parseMermaidFlowchart(code: String): FlowchartData? {
 
 // Edge patterns: -->, -.-> , ==>, ---, -.- , ===, -- text -->, -. text .->
 private val EDGE_PATTERN = Regex(
-    """^(\S+?)\s*(-->|-.->|==>|---|(?:-\.-)|===|--\s+.+?\s+-->|--\s+.+?\s+---|-\.\s+.+?\s+\.->)\s*(\S+.*)$"""
+    """^(\S+?)\s*(-->|-.->|==>|---|-\.-|===|--\s+.+?\s+-->|--\s+.+?\s+---|-\.\s+.+?\s+\.->)\s*(\S+.*)$"""
 )
 
-private val NODE_DEF_RECT = Regex("""^([A-Za-z_][\w]*)\[(.+?)\]$""")
+private val NODE_DEF_RECT = Regex("""^([A-Za-z_][\w]*)\[(.+?)]$""")
 private val NODE_DEF_ROUND = Regex("""^([A-Za-z_][\w]*)\((.+?)\)$""")
-private val NODE_DEF_STADIUM = Regex("""^([A-Za-z_][\w]*)\(\[(.+?)\]\)$""")
+private val NODE_DEF_STADIUM = Regex("""^([A-Za-z_][\w]*)\(\[(.+?)]\)$""")
 private val NODE_DEF_DIAMOND = Regex("""^([A-Za-z_][\w]*)\{(.+?)\}$""")
 private val NODE_DEF_HEXAGON = Regex("""^([A-Za-z_][\w]*)\{\{(.+?)\}\}$""")
 private val NODE_DEF_CIRCLE = Regex("""^([A-Za-z_][\w]*)\(\((.+?)\)\)$""")
@@ -410,6 +409,7 @@ internal fun DrawScope.drawFlowchart(
     data: FlowchartData,
     layouts: List<NodeLayout>,
     textMeasurer: TextMeasurer,
+    theme: MarkdownTheme,
 ) {
     val layoutMap = layouts.associateBy { it.node.id }
 
@@ -417,16 +417,16 @@ internal fun DrawScope.drawFlowchart(
     for (edge in data.edges) {
         val from = layoutMap[edge.from] ?: continue
         val to = layoutMap[edge.to] ?: continue
-        drawFlowEdge(from, to, edge, data.direction, textMeasurer)
+        drawFlowEdge(from, to, edge, data.direction, textMeasurer, theme)
     }
 
     // Draw nodes
     for (layout in layouts) {
-        drawFlowNode(layout, textMeasurer)
+        drawFlowNode(layout, textMeasurer, theme)
     }
 }
 
-private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasurer) {
+private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasurer, theme: MarkdownTheme) {
     val x = layout.x
     val y = layout.y
     val w = layout.width
@@ -514,7 +514,7 @@ private fun DrawScope.drawFlowNode(layout: NodeLayout, textMeasurer: TextMeasure
     // Draw label
     val textResult = textMeasurer.measure(
         layout.node.label,
-        style = TextStyle(fontSize = 13.sp, color = LABEL_COLOR),
+        style = theme.diagramNodeLabelTextStyle.merge(TextStyle(color = LABEL_COLOR)),
     )
     drawText(
         textResult,
@@ -531,6 +531,7 @@ private fun DrawScope.drawFlowEdge(
     edge: FlowEdge,
     direction: FlowDirection,
     textMeasurer: TextMeasurer,
+    theme: MarkdownTheme,
 ) {
     val isVertical = direction == FlowDirection.TD ||
             direction == FlowDirection.TB ||
@@ -610,7 +611,7 @@ private fun DrawScope.drawFlowEdge(
         val midY = (startY + endY) / 2
         val textResult = textMeasurer.measure(
             edge.label,
-            style = TextStyle(fontSize = 11.sp, color = EDGE_LABEL_COLOR),
+            style = theme.diagramEdgeLabelTextStyle.merge(TextStyle(color = EDGE_LABEL_COLOR)),
         )
         val bgPad = 3f
         drawRoundRect(
@@ -647,6 +648,7 @@ internal fun FlowchartDiagramRenderer(
     data: FlowchartData,
     modifier: Modifier = Modifier,
 ) {
+    val theme = LocalMarkdownTheme.current
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
 
@@ -654,7 +656,7 @@ internal fun FlowchartDiagramRenderer(
         layoutFlowchart(data) { text ->
             val result = textMeasurer.measure(
                 text,
-                style = TextStyle(fontSize = 13.sp),
+                style = theme.diagramNodeLabelTextStyle,
             )
             Pair(result.size.width.toFloat(), result.size.height.toFloat())
         }
@@ -669,11 +671,11 @@ internal fun FlowchartDiagramRenderer(
     ) {
         Canvas(
             modifier = Modifier
-                .width(canvasWidthDp + 8.dp)
-                .height(canvasHeightDp + 8.dp)
-                .padding(4.dp),
+                .width(canvasWidthDp + theme.diagramCanvasInset)
+                .height(canvasHeightDp + theme.diagramCanvasInset)
+                .padding(theme.diagramCanvasPadding),
         ) {
-            drawFlowchart(data, layouts, textMeasurer)
+            drawFlowchart(data, layouts, textMeasurer, theme)
         }
     }
 }

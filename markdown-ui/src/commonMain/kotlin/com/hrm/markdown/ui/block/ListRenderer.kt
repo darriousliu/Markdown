@@ -106,11 +106,11 @@ private fun TaskListMarker(
             .size(theme.taskList.boxSize)
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(theme.taskCornerRadius))
             .background(
-                color = if (checked) theme.taskList.checkedColor else theme.taskUncheckedBackgroundColor,
+                color = if (checked) theme.taskCheckedBackgroundColor else theme.taskUncheckedBackgroundColor,
             )
             .border(
                 width = theme.taskList.strokeWidth,
-                brush = SolidColor(if (checked) theme.taskList.checkedColor else theme.taskList.uncheckedColor),
+                brush = SolidColor(if (checked) theme.taskCheckedBorderColor else theme.taskUncheckedBorderColor),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(theme.taskCornerRadius),
             ),
         contentAlignment = Alignment.Center,

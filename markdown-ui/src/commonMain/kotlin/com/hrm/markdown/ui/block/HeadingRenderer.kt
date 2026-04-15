@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.Heading
 import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.parser.ast.SetextHeading
@@ -54,7 +53,7 @@ internal fun HeadingRenderer(
             inlineContent = inlineContents,
         )
 
-        if (node.level <= theme.heading.underlineMaxLevel && theme.heading.underlineThickness > 0.dp) {
+        if (node.level <= theme.heading.underlineMaxLevel && theme.heading.underlineThickness.value > 0f) {
             LocalMarkdownExtensionProvider.current.HorizontalDivider(
                 style = theme.thematicBreak.copy(
                     color = theme.heading.underlineColor,

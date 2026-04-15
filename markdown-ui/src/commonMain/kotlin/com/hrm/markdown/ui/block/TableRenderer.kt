@@ -156,11 +156,16 @@ private fun TableCellRenderer(
     val theme = LocalMarkdownTheme.current
     val onLinkClick = LocalOnLinkClick.current
 
-    val textAlign = when (alignment) {
+    val fallbackTextAlign = when (alignment) {
         Table.Alignment.LEFT -> TextAlign.Start
         Table.Alignment.CENTER -> TextAlign.Center
         Table.Alignment.RIGHT -> TextAlign.End
         Table.Alignment.NONE -> TextAlign.Start
+    }
+    val textAlign = if (isHeader) {
+        theme.tableHeaderTextAlign ?: fallbackTextAlign
+    } else {
+        theme.tableCellTextAlign ?: fallbackTextAlign
     }
 
     val style = if (isHeader) {
