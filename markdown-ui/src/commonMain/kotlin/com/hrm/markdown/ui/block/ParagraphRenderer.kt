@@ -14,6 +14,7 @@ import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.MarkdownImageData
+import com.hrm.markdown.ui.MarkdownImageFrame
 import com.hrm.markdown.ui.inline.buildInlineAnnotatedString
 import com.hrm.markdown.ui.inline.rememberInlineContent
 
@@ -124,7 +125,13 @@ private fun MixedParagraphRenderer(
                         attributes = img.attributes,
                     )
                     if (customRenderer != null) {
-                        customRenderer(imageData, Modifier)
+                        MarkdownImageFrame(
+                            data = imageData,
+                            style = theme.image,
+                            modifier = theme.modifiers.image,
+                        ) {
+                            customRenderer(imageData, Modifier)
+                        }
                     } else {
                         extensionProvider.BlockImage(
                             node = img,

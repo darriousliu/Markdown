@@ -52,9 +52,20 @@ class MarkdownThemeTest {
         assertEquals(PaddingValues(12.dp).toPaddingSnapshot(), theme.blockQuote.contentPadding.toPaddingSnapshot())
         assertNull(theme.blockQuote.textStyle)
 
+        assertEquals(24.dp.value, theme.list.orderedMarkerWidth.value)
+        assertNull(theme.list.orderedMarkerTextStyle)
+
         assertEquals(TextAlign.Start, theme.image.captionTextAlign)
         assertEquals(TextAlign.Center, theme.figure.captionTextAlign)
         assertTrue(theme.figure.captionItalic)
+
+        assertEquals(1, theme.table.cellMaxLines)
+        assertEquals(1, theme.table.headerMaxLines)
+        assertEquals(TableCellVerticalAlignment.Center, theme.table.cellVerticalAlignment)
+        assertEquals(TableCellVerticalAlignment.Center, theme.table.headerVerticalAlignment)
+
+        assertEquals(PaddingValues(top = 4.dp).toPaddingSnapshot(), theme.footnote.definitionPadding.toPaddingSnapshot())
+        assertEquals(16.dp.value, theme.footnote.definitionIndent.value)
 
         assertEquals(PaddingValues(horizontal = 4.dp, vertical = 2.dp).toPaddingSnapshot(), theme.inlineCode.padding.toPaddingSnapshot())
         assertNull(theme.inlineCode.borderColor)
@@ -63,6 +74,11 @@ class MarkdownThemeTest {
         assertEquals(PaddingValues(12.dp).toPaddingSnapshot(), theme.admonition.padding.toPaddingSnapshot())
         assertTrue(theme.admonition.cornerRadius.value >= 0f)
         assertNull(theme.admonition.contentTextStyle)
+
+        assertEquals(Color.Transparent, theme.taskList.uncheckedBackgroundColor)
+        assertEquals(4.dp.value, theme.taskList.cornerRadius.value)
+        assertEquals("✓", theme.taskList.checkmarkText)
+        assertNull(theme.taskList.checkmarkTextStyle)
     }
 }
 

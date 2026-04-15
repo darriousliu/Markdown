@@ -11,6 +11,7 @@ import com.hrm.markdown.ui.LocalImageRenderer
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownImageData
+import com.hrm.markdown.ui.MarkdownImageFrame
 
 /**
  * Figure 渲染器：将 Figure 节点渲染为图片 + 标题（figcaption）。
@@ -26,17 +27,20 @@ internal fun FigureRenderer(
     val imageRenderer = LocalImageRenderer.current
     if (imageRenderer != null) {
         Column(modifier = modifier) {
-            imageRenderer(
-                MarkdownImageData(
-                    url = node.imageUrl,
-                    altText = node.caption,
-                    title = node.caption,
-                    width = node.imageWidth,
-                    height = node.imageHeight,
-                    attributes = node.attributes,
-                ),
-                Modifier,
+            val imageData = MarkdownImageData(
+                url = node.imageUrl,
+                altText = node.caption,
+                title = node.caption,
+                width = node.imageWidth,
+                height = node.imageHeight,
+                attributes = node.attributes,
             )
+            MarkdownImageFrame(
+                data = imageData,
+                style = theme.image,
+            ) {
+                imageRenderer(imageData, Modifier)
+            }
             if (node.caption.isNotEmpty()) {
                 BasicText(
                     text = node.caption,

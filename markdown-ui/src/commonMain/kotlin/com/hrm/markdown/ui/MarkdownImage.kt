@@ -5,13 +5,17 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 /**
  * 图片渲染所需的数据模型。
@@ -91,17 +95,38 @@ internal fun DefaultMarkdownImage(
     modifier: Modifier = Modifier,
 ) {
     val theme = LocalMarkdownTheme.current
+    MarkdownImageFrame(
+        data = data,
+        style = theme.image,
+        modifier = modifier,
+    ) {
+        BasicText(
+            text = data.altText.ifEmpty { data.title ?: data.url },
+            style = theme.image.captionTextStyle.copy(textAlign = theme.image.captionTextAlign),
+        )
+    }
+}
+
+@Composable
+internal fun MarkdownImageFrame(
+    data: MarkdownImageData,
+    style: com.hrm.markdown.ui.theme.ImageStyle,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val shape = RoundedCornerShape(style.cornerRadius)
 
     Box(
         modifier = modifier
             .applyImageSize(data.width, data.height)
-            .padding(vertical = 4.dp),
+            .clip(shape)
+            .background(style.background)
+            .border(style.borderWidth, style.borderColor, shape)
+            .padding(vertical = 4.dp)
+            .padding(style.contentPadding),
         contentAlignment = Alignment.Center,
     ) {
-        BasicText(
-            text = data.altText.ifEmpty { data.title ?: data.url },
-            style = theme.image.captionTextStyle,
-        )
+        content()
     }
 }
 

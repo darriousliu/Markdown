@@ -21,6 +21,7 @@ import com.hrm.markdown.parser.ast.TableRow
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.inline.rememberInlineContent
+import com.hrm.markdown.ui.theme.TableCellVerticalAlignment
 
 /**
  * GFM 表格渲染器。
@@ -167,6 +168,12 @@ private fun TableCellRenderer(
     } else {
         theme.tableCellTextStyle.copy(textAlign = textAlign)
     }
+    val maxLines = if (isHeader) theme.tableHeaderMaxLines else theme.tableCellMaxLines
+    val verticalAlignment = when (if (isHeader) theme.tableHeaderVerticalAlignment else theme.tableCellVerticalAlignment) {
+        TableCellVerticalAlignment.Top -> Alignment.TopStart
+        TableCellVerticalAlignment.Center -> Alignment.CenterStart
+        TableCellVerticalAlignment.Bottom -> Alignment.BottomStart
+    }
 
     if (cell == null) {
         Box(modifier = modifier)
@@ -175,11 +182,11 @@ private fun TableCellRenderer(
 
     val (annotated, inlineContents) = rememberInlineContent(cell, onLinkClick)
 
-    Box(modifier = modifier, contentAlignment = Alignment.CenterStart) {
+    Box(modifier = modifier, contentAlignment = verticalAlignment) {
         if (inlineContents.isEmpty()) {
-            BasicText(text = annotated, style = style, maxLines = 1)
+            BasicText(text = annotated, style = style, maxLines = maxLines)
         } else {
-            BasicText(text = annotated, style = style, inlineContent = inlineContents, maxLines = 1)
+            BasicText(text = annotated, style = style, inlineContent = inlineContents, maxLines = maxLines)
         }
     }
 }

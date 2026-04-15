@@ -5,18 +5,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -194,13 +193,13 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
                     .width(style.defaultWidth)
                     .height(style.defaultHeight)
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius))
-                    .background(Color(0x14000000))
-                    .border(1.dp, Color(0x22000000), androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius)),
+                    .background(style.background)
+                    .border(style.borderWidth, style.borderColor, androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius)),
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = altText.ifEmpty { node.destination },
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(style.contentPadding),
                     style = style.captionTextStyle.copy(textAlign = style.captionTextAlign),
                 )
             }
@@ -306,27 +305,19 @@ private fun BasicCodeBlock(
     highlightLines: List<IntRange> = emptyList(),
     modifier: Modifier,
 ) {
-    val layoutDirection = LocalLayoutDirection.current
     val normalizedLines = lines.ifEmpty { listOf(" ") }
     val highlightedLineNumbers = highlightLines.flatMap { it.toList() }.toSet()
 
     Column(
         modifier = modifier
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.cornerRadius))
+            .clip(RoundedCornerShape(style.cornerRadius))
             .background(style.background),
     ) {
         if (!title.isNullOrEmpty()) {
             Box(
                 modifier = Modifier
                     .background(style.titleBackground)
-                    .padding(
-                        PaddingValues(
-                            start = style.padding.calculateLeftPadding(layoutDirection),
-                            top = 8.dp,
-                            end = style.padding.calculateRightPadding(layoutDirection),
-                            bottom = 8.dp,
-                        )
-                    ),
+                    .padding(style.titlePadding),
             ) {
                 BasicText(
                     text = title,
@@ -337,23 +328,23 @@ private fun BasicCodeBlock(
 
         Column(
             modifier = Modifier.padding(style.padding),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(style.lineSpacing),
         ) {
             normalizedLines.forEachIndexed { index, line ->
                 val lineNumber = startLineNumber + index
                 val isHighlighted = lineNumber in highlightedLineNumbers
                 Row(
                     modifier = Modifier
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.lineCornerRadius))
                         .background(
                             if (isHighlighted) style.lineHighlightBackground else Color.Transparent
                         )
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                        .padding(style.linePadding),
                 ) {
                     if (showLineNumbers) {
                         BasicText(
                             text = lineNumber.toString(),
-                            modifier = Modifier.padding(end = 12.dp),
+                            modifier = Modifier.padding(style.lineNumberPadding),
                             style = style.textStyle.copy(
                                 color = style.lineNumberColor,
                                 textAlign = TextAlign.End,

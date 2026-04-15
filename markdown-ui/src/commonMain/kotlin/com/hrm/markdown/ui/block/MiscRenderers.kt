@@ -9,8 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.hrm.markdown.parser.ast.DefinitionDescription
 import com.hrm.markdown.parser.ast.DefinitionList
 import com.hrm.markdown.parser.ast.DefinitionTerm
@@ -84,17 +82,14 @@ internal fun FootnoteDefinitionRenderer(
 ) {
     val theme = LocalMarkdownTheme.current
 
-    Column(modifier = modifier.padding(top = 4.dp)) {
+    Column(modifier = modifier.padding(theme.footnoteDefinitionPadding)) {
         BasicText(
             text = "[${node.index}] ${node.label}",
-            style = theme.bodyStyle.copy(
-                fontWeight = FontWeight.SemiBold,
-                    fontSize = theme.footnoteStyle.fontSize,
-            ),
+            style = theme.footnoteDefinitionLabelStyle,
         )
         MarkdownBlockChildren(
             parent = node,
-            modifier = Modifier.padding(start = 16.dp),
+            modifier = Modifier.padding(start = theme.footnoteDefinitionIndent),
         )
     }
 }

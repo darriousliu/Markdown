@@ -16,11 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.hrm.markdown.parser.ast.BlankLine
 import com.hrm.markdown.parser.ast.ListBlock
 import com.hrm.markdown.parser.ast.ListItem
-import com.hrm.markdown.parser.ast.Paragraph
 import com.hrm.markdown.ui.LocalMarkdownTheme
 import com.hrm.markdown.ui.MarkdownBlockChildren
 
@@ -72,19 +69,20 @@ private fun ListItemRenderer(
                 )
             }
             ordered -> {
+                val orderedMarkerStyle = theme.listOrderedMarkerTextStyle ?: theme.bodyStyle.copy(
+                    color = theme.listBulletColor,
+                    fontWeight = FontWeight.SemiBold,
+                )
                 BasicText(
                     text = "${index}.",
-                    modifier = Modifier.width(24.dp).align(Alignment.Top),
-                    style = theme.bodyStyle.copy(
-                        color = theme.listBulletColor,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
+                    modifier = Modifier.width(theme.listOrderedMarkerWidth).align(Alignment.Top),
+                    style = orderedMarkerStyle,
                 )
             }
             else -> {
                 BasicText(
                     text = theme.list.bullet,
-                    modifier = Modifier.width(theme.list.markerWidth).align(Alignment.Top),
+                    modifier = Modifier.width(theme.listMarkerWidth).align(Alignment.Top),
                     style = theme.bodyStyle.copy(color = theme.listBulletColor),
                 )
             }
@@ -106,24 +104,25 @@ private fun TaskListMarker(
     Box(
         modifier = modifier
             .size(theme.taskList.boxSize)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(theme.taskCornerRadius))
             .background(
-                color = if (checked) theme.taskList.checkedColor else androidx.compose.ui.graphics.Color.Transparent,
+                color = if (checked) theme.taskList.checkedColor else theme.taskUncheckedBackgroundColor,
             )
             .border(
                 width = theme.taskList.strokeWidth,
                 brush = SolidColor(if (checked) theme.taskList.checkedColor else theme.taskList.uncheckedColor),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(theme.taskCornerRadius),
             ),
         contentAlignment = Alignment.Center,
     ) {
         if (checked) {
+            val checkmarkStyle = theme.taskCheckmarkTextStyle ?: theme.bodyStyle.copy(
+                color = theme.taskList.checkmarkColor,
+                fontWeight = FontWeight.Bold,
+            )
             BasicText(
-                text = "✓",
-                style = theme.bodyStyle.copy(
-                    color = theme.taskList.checkmarkColor,
-                    fontWeight = FontWeight.Bold,
-                ),
+                text = theme.taskCheckmarkText,
+                style = checkmarkStyle.copy(color = theme.taskList.checkmarkColor),
             )
         }
     }

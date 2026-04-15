@@ -59,6 +59,15 @@ internal val MarkdownTheme.listIndent
 internal val MarkdownTheme.listBulletColor
     get() = list.bulletColor
 
+internal val MarkdownTheme.listMarkerWidth
+    get() = list.markerWidth
+
+internal val MarkdownTheme.listOrderedMarkerWidth
+    get() = list.orderedMarkerWidth
+
+internal val MarkdownTheme.listOrderedMarkerTextStyle
+    get() = list.orderedMarkerTextStyle
+
 internal val MarkdownTheme.tableBorderColor
     get() = table.borderColor
 
@@ -80,6 +89,18 @@ internal val MarkdownTheme.tableCellTextStyle
 internal val MarkdownTheme.tableHeaderTextStyle
     get() = table.headerTextStyle
 
+internal val MarkdownTheme.tableCellMaxLines
+    get() = table.cellMaxLines
+
+internal val MarkdownTheme.tableHeaderMaxLines
+    get() = table.headerMaxLines
+
+internal val MarkdownTheme.tableCellVerticalAlignment
+    get() = table.cellVerticalAlignment
+
+internal val MarkdownTheme.tableHeaderVerticalAlignment
+    get() = table.headerVerticalAlignment
+
 internal val MarkdownTheme.linkColor
     get() = link.textStyle.color
 
@@ -88,6 +109,18 @@ internal val MarkdownTheme.taskCheckedColor
 
 internal val MarkdownTheme.taskUncheckedColor
     get() = taskList.uncheckedColor
+
+internal val MarkdownTheme.taskUncheckedBackgroundColor
+    get() = taskList.uncheckedBackgroundColor
+
+internal val MarkdownTheme.taskCornerRadius
+    get() = taskList.cornerRadius
+
+internal val MarkdownTheme.taskCheckmarkText
+    get() = taskList.checkmarkText
+
+internal val MarkdownTheme.taskCheckmarkTextStyle
+    get() = taskList.checkmarkTextStyle
 
 internal val MarkdownTheme.mathFontSize
     get() = math.fontSize.value
@@ -127,6 +160,15 @@ internal val MarkdownTheme.admonitionContentTextStyle
 
 internal val MarkdownTheme.footnoteStyle
     get() = footnote.textStyle
+
+internal val MarkdownTheme.footnoteDefinitionLabelStyle
+    get() = footnote.definitionLabelTextStyle
+
+internal val MarkdownTheme.footnoteDefinitionPadding
+    get() = footnote.definitionPadding
+
+internal val MarkdownTheme.footnoteDefinitionIndent
+    get() = footnote.definitionIndent
 
 internal val MarkdownTheme.htmlBlockStyle
     get() = htmlBlock.textStyle

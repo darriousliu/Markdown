@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -108,7 +109,9 @@ data class BlockQuoteStyle(
 data class ListStyle(
     val indent: Dp = 24.dp,
     val markerWidth: Dp = 24.dp,
+    val orderedMarkerWidth: Dp = 24.dp,
     val bulletColor: Color = Color(0xFF1F2328),
+    val orderedMarkerTextStyle: TextStyle? = null,
     /** tight list 的块间距（列表项之间）。 */
     val tightSpacing: Dp = 2.dp,
     /** loose list 的块间距（空行分隔时）。 */
@@ -129,6 +132,8 @@ data class CodeBlockStyle(
     val padding: PaddingValues = PaddingValues(12.dp),
     /** 代码块标题栏背景色。 */
     val titleBackground: Color = Color(0xFFEBEDF0),
+    /** 代码块标题栏 padding。 */
+    val titlePadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
     /** 代码块标题栏文字样式。 */
     val titleTextStyle: TextStyle = TextStyle(
         fontFamily = FontFamily.Monospace,
@@ -137,8 +142,16 @@ data class CodeBlockStyle(
     ),
     /** 行号的颜色。 */
     val lineNumberColor: Color = Color(0xFF6E7681),
+    /** 行号区域和正文之间的间距。 */
+    val lineNumberPadding: PaddingValues = PaddingValues(end = 12.dp),
     /** 高亮行的背景色。 */
     val lineHighlightBackground: Color = Color(0xFFFFF8C5),
+    /** 代码行之间的间距。 */
+    val lineSpacing: Dp = 2.dp,
+    /** 单行代码容器圆角。 */
+    val lineCornerRadius: Dp = 4.dp,
+    /** 单行代码容器 padding。 */
+    val linePadding: PaddingValues = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
 )
 
 @Immutable
@@ -167,6 +180,10 @@ data class TableStyle(
         lineHeight = 20.sp,
         fontWeight = FontWeight.SemiBold,
     ),
+    val cellMaxLines: Int = 1,
+    val headerMaxLines: Int = 1,
+    val cellVerticalAlignment: TableCellVerticalAlignment = TableCellVerticalAlignment.Center,
+    val headerVerticalAlignment: TableCellVerticalAlignment = TableCellVerticalAlignment.Center,
 )
 
 @Immutable
@@ -185,7 +202,7 @@ data class LinkStyle(
 
 @Immutable
 data class EmphasisStyle(
-    val textStyle: SpanStyle = SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
+    val textStyle: SpanStyle = SpanStyle(fontStyle = FontStyle.Italic),
 )
 
 @Immutable
@@ -253,7 +270,11 @@ data class ImageStyle(
     /** 占位符默认尺寸，供扩展 provider 参考。 */
     val defaultWidth: Dp = 200.dp,
     val defaultHeight: Dp = 150.dp,
+    val background: Color = Color.Transparent,
+    val borderColor: Color = Color.Transparent,
+    val borderWidth: Dp = 0.dp,
     val cornerRadius: Dp = 0.dp,
+    val contentPadding: PaddingValues = PaddingValues(12.dp),
     /** 图片标题（figcaption）样式。 */
     val captionTextStyle: TextStyle = TextStyle(
         fontSize = 13.sp,
@@ -266,6 +287,12 @@ data class ImageStyle(
 @Immutable
 data class FootnoteStyle(
     val textStyle: SpanStyle = SpanStyle(fontSize = 12.sp),
+    val definitionLabelTextStyle: TextStyle = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+    ),
+    val definitionPadding: PaddingValues = PaddingValues(top = 4.dp),
+    val definitionIndent: Dp = 16.dp,
 )
 
 @Immutable
@@ -330,9 +357,13 @@ data class SpoilerStyle(
 data class TaskListStyle(
     val checkedColor: Color = Color(0xFF1A7F37),
     val uncheckedColor: Color = Color(0xFFD0D7DE),
+    val uncheckedBackgroundColor: Color = Color.Transparent,
     val boxSize: Dp = 18.dp,
+    val cornerRadius: Dp = 4.dp,
     val strokeWidth: Dp = 1.5.dp,
     val checkmarkColor: Color = Color.White,
+    val checkmarkText: String = "✓",
+    val checkmarkTextStyle: TextStyle? = null,
 )
 
 @Immutable
@@ -352,6 +383,13 @@ data class FigureStyle(
     val captionTextAlign: TextAlign = TextAlign.Center,
     val captionItalic: Boolean = true,
 )
+
+@Immutable
+enum class TableCellVerticalAlignment {
+    Top,
+    Center,
+    Bottom,
+}
 
 private fun defaultHeadingTextStyles(): List<TextStyle> = listOf(
     TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp),
