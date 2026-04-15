@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
@@ -39,9 +40,9 @@ internal fun FigureRenderer(
                 .border(theme.figureBorderWidth, theme.figureBorderColor, figureShape)
                 .padding(theme.figurePadding),
             horizontalAlignment = when (theme.figureContentAlignment) {
-                FigureContentAlignment.Start -> androidx.compose.ui.Alignment.Start
-                FigureContentAlignment.Center -> androidx.compose.ui.Alignment.CenterHorizontally
-                FigureContentAlignment.End -> androidx.compose.ui.Alignment.End
+                FigureContentAlignment.Start -> Alignment.Start
+                FigureContentAlignment.Center -> Alignment.CenterHorizontally
+                FigureContentAlignment.End -> Alignment.End
             },
         ) {
             val imageData = MarkdownImageData(

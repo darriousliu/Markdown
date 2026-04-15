@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
@@ -32,6 +31,7 @@ import com.hrm.markdown.parser.ast.MathBlock
 import com.hrm.markdown.parser.ast.ShortcodeBlock
 import com.hrm.markdown.parser.ast.TabBlock
 import com.hrm.markdown.parser.ast.TabItem
+import com.hrm.markdown.ui.DefaultMarkdownImage
 import com.hrm.markdown.ui.diagram.DiagramFallback
 import com.hrm.markdown.ui.diagram.GraphvizDiagram
 import com.hrm.markdown.ui.diagram.MermaidFlowchartDiagram
@@ -186,28 +186,17 @@ open class DefaultExtensionProvider : MarkdownExtensionProvider {
         style: ImageStyle,
         modifier: Modifier,
     ) {
-        Column(modifier = modifier) {
-            Box(
-                modifier = Modifier
-                    .width(style.defaultWidth)
-                    .height(style.defaultHeight)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(style.frame.cornerRadius))
-                    .background(style.frame.background)
-                    .border(
-                        style.frame.borderWidth,
-                        style.frame.borderColor,
-                        androidx.compose.foundation.shape.RoundedCornerShape(style.frame.cornerRadius),
-                    )
-                    .padding(style.frame.padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                BasicText(
-                    text = altText.ifEmpty { node.destination },
-                    modifier = Modifier.padding(style.contentPadding),
-                    style = style.placeholderTextStyle.copy(textAlign = style.caption.textAlign),
-                )
-            }
-        }
+        DefaultMarkdownImage(
+            data = com.hrm.markdown.ui.MarkdownImageData(
+                url = node.destination,
+                altText = altText,
+                title = node.title,
+                width = node.imageWidth,
+                height = node.imageHeight,
+                attributes = node.attributes,
+            ),
+            modifier = modifier,
+        )
     }
 
     @Composable
