@@ -3,10 +3,13 @@ package com.hrm.markdown.ui.inline
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
@@ -75,6 +78,7 @@ import com.hrm.markdown.parser.ast.Superscript
 import com.hrm.markdown.parser.ast.Text
 import com.hrm.markdown.parser.ast.WikiLink
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
+import com.hrm.markdown.ui.extension.InlineExtensionOverflowBehavior
 import com.hrm.markdown.ui.extension.InlineExtensionSlot
 import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
 import com.hrm.markdown.ui.theme.InlineChipContentVerticalAlignment
@@ -92,6 +96,7 @@ import com.hrm.markdown.ui.theme.MarkdownTheme
 internal fun rememberInlineContent(
     parent: ContainerNode,
     onLinkClick: ((String) -> Unit)? = null,
+    maxInlineContentWidth: TextUnit? = null,
 ): Pair<AnnotatedString, Map<String, InlineTextContent>> {
     val theme = LocalMarkdownTheme.current
     val extensionProvider = LocalMarkdownExtensionProvider.current
@@ -104,7 +109,9 @@ internal fun rememberInlineContent(
         parent,
         theme,
         extensionProvider,
+        extensionSlots,
         onLinkClick,
+        maxInlineContentWidth,
         density,
         layoutDirection,
         textMeasurer
@@ -117,6 +124,7 @@ internal fun rememberInlineContent(
                 extensionSlots,
                 inlineContents,
                 onLinkClick,
+                maxInlineContentWidth,
                 density,
                 layoutDirection,
                 textMeasurer,
@@ -127,7 +135,7 @@ internal fun rememberInlineContent(
 }
 
 @Composable
-private fun rememberInlineExtensionSlots(
+internal fun rememberInlineExtensionSlots(
     nodes: List<Node>,
     theme: MarkdownTheme,
     provider: MarkdownExtensionProvider,
@@ -173,6 +181,7 @@ internal fun buildInlineAnnotatedString(
     extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)? = null,
+    maxInlineContentWidth: TextUnit? = null,
     density: Density? = null,
     layoutDirection: LayoutDirection? = null,
     textMeasurer: TextMeasurer? = null,
@@ -183,6 +192,7 @@ internal fun buildInlineAnnotatedString(
         extensionSlots,
         inlineContents,
         onLinkClick,
+        maxInlineContentWidth,
         density,
         layoutDirection,
         textMeasurer,
@@ -195,6 +205,7 @@ private fun AnnotatedString.Builder.renderInlineChildren(
     extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)?,
+    maxInlineContentWidth: TextUnit? = null,
     density: Density? = null,
     layoutDirection: LayoutDirection? = null,
     textMeasurer: TextMeasurer? = null,
@@ -206,6 +217,7 @@ private fun AnnotatedString.Builder.renderInlineChildren(
             extensionSlots,
             inlineContents,
             onLinkClick,
+            maxInlineContentWidth,
             density,
             layoutDirection,
             textMeasurer
@@ -219,6 +231,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
     extensionSlots: Map<Node, InlineExtensionSlot>,
     inlineContents: MutableMap<String, InlineTextContent>,
     onLinkClick: ((String) -> Unit)?,
+    maxInlineContentWidth: TextUnit? = null,
     density: Density? = null,
     layoutDirection: LayoutDirection? = null,
     textMeasurer: TextMeasurer? = null,
@@ -238,6 +251,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -253,6 +267,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -268,6 +283,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -309,6 +325,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -323,12 +340,12 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 appendInlineContent(id, node.title ?: node.destination)
                 inlineContents[id] = InlineTextContent(
                     placeholder = Placeholder(
-                        width = slot.width,
+                        width = resolveInlineSlotPlaceholderWidth(slot, maxInlineContentWidth),
                         height = slot.height,
                         placeholderVerticalAlign = slot.verticalAlign,
                     ),
                 ) {
-                    slot.content()
+                    RenderInlineExtensionSlot(slot, maxInlineContentWidth, density)
                 }
             } else {
                 append(node.children.filterIsInstance<Text>().joinToString("") { it.literal }
@@ -379,12 +396,12 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 appendInlineContent(id, node.literal)
                 inlineContents[id] = InlineTextContent(
                     placeholder = Placeholder(
-                        width = slot.width,
+                        width = resolveInlineSlotPlaceholderWidth(slot, maxInlineContentWidth),
                         height = slot.height,
                         placeholderVerticalAlign = slot.verticalAlign,
                     ),
                 ) {
-                    slot.content()
+                    RenderInlineExtensionSlot(slot, maxInlineContentWidth, density)
                 }
             } else {
                 append(node.literal)
@@ -399,6 +416,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -418,6 +436,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -437,6 +456,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -452,6 +472,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -472,6 +493,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                         extensionSlots,
                         inlineContents,
                         onLinkClick,
+                        maxInlineContentWidth,
                         density,
                         layoutDirection,
                         textMeasurer
@@ -484,6 +506,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -572,12 +595,12 @@ private fun AnnotatedString.Builder.renderInlineNode(
                 appendInlineContent(id, node.tagName)
                 inlineContents[id] = InlineTextContent(
                     placeholder = Placeholder(
-                        width = slot.width,
+                        width = resolveInlineSlotPlaceholderWidth(slot, maxInlineContentWidth),
                         height = slot.height,
                         placeholderVerticalAlign = slot.verticalAlign,
                     ),
                 ) {
-                    slot.content()
+                    RenderInlineExtensionSlot(slot, maxInlineContentWidth, density)
                 }
             } else {
                 withStyle(
@@ -643,6 +666,7 @@ private fun AnnotatedString.Builder.renderInlineNode(
                     extensionSlots,
                     inlineContents,
                     onLinkClick,
+                    maxInlineContentWidth,
                     density,
                     layoutDirection,
                     textMeasurer
@@ -740,6 +764,46 @@ private fun resolveFootnoteLinkStyle(theme: MarkdownTheme): SpanStyle =
     resolveLinkStyle(theme.linkStyle, theme.linkColor)
         .merge(theme.footnoteStyle)
         .merge(SpanStyle(baselineShift = BaselineShift.Superscript))
+
+private fun resolveInlineSlotPlaceholderWidth(
+    slot: InlineExtensionSlot,
+    maxInlineContentWidth: TextUnit?,
+): TextUnit {
+    if (slot.overflowBehavior != InlineExtensionOverflowBehavior.HorizontalScroll) {
+        return slot.width
+    }
+    val widthLimit = maxInlineContentWidth ?: return slot.width
+    if (slot.width.type != widthLimit.type) return slot.width
+    return if (slot.width.value > widthLimit.value) widthLimit else slot.width
+}
+
+@Composable
+private fun RenderInlineExtensionSlot(
+    slot: InlineExtensionSlot,
+    maxInlineContentWidth: TextUnit?,
+    density: Density?,
+) {
+    val displayWidth = resolveInlineSlotPlaceholderWidth(slot, maxInlineContentWidth)
+    if (
+        slot.overflowBehavior == InlineExtensionOverflowBehavior.HorizontalScroll &&
+        density != null &&
+        displayWidth.type == slot.width.type &&
+        displayWidth.value < slot.width.value
+    ) {
+        val scrollState = rememberScrollState()
+        Box(
+            modifier = Modifier
+                .width(with(density) { displayWidth.toDp() })
+                .horizontalScroll(scrollState)
+        ) {
+            Box(modifier = Modifier.width(with(density) { slot.width.toDp() })) {
+                slot.content()
+            }
+        }
+    } else {
+        slot.content()
+    }
+}
 
 private fun spanStyleToTextStyle(span: SpanStyle): TextStyle = TextStyle(
     color = span.color,
@@ -950,6 +1014,7 @@ private fun SpoilerContent(
                         onLinkClick,
                         null,
                         null,
+                        null,
                         null
                     )
                 }
@@ -966,6 +1031,7 @@ private fun SpoilerContent(
                         extensionSlots,
                         inlineContents,
                         onLinkClick,
+                        null,
                         null,
                         null,
                         null

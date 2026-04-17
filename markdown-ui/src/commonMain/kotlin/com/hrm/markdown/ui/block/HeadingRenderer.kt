@@ -30,37 +30,44 @@ internal fun HeadingRenderer(
     val config = LocalMarkdownConfig.current
     val level = (node.level - 1).coerceIn(0, theme.headingStyles.lastIndex)
     val style = theme.headingStyles[level]
-    val (annotated, inlineContents) = rememberInlineContent(node, onLinkClick)
+    val document = LocalRendererDocument.current
 
-    val numbering = if (config.enableHeadingNumbering) {
-        val document = LocalRendererDocument.current
-        remember(document, node) { computeHeadingNumber(document.children, node) }
-    } else null
-
-    val finalAnnotated = if (numbering != null) {
-        remember(numbering, annotated) {
-            buildAnnotatedString {
-                append("$numbering ")
-                append(annotated)
-            }
-        }
-    } else annotated
-
-    Column(modifier = modifier) {
-        BasicText(
-            text = finalAnnotated,
-            style = style,
-            inlineContent = inlineContents,
+    WithInlineContentWidth(modifier = modifier) { maxInlineContentWidth ->
+        val (annotated, inlineContents) = rememberInlineContent(
+            node,
+            onLinkClick,
+            maxInlineContentWidth,
         )
 
-        if (node.level <= theme.heading.underlineMaxLevel && theme.heading.underlineThickness.value > 0f) {
-            LocalMarkdownExtensionProvider.current.HorizontalDivider(
-                style = theme.thematicBreak.copy(
-                    color = theme.heading.underlineColor,
-                    thickness = theme.heading.underlineThickness,
-                ),
-                modifier = Modifier.padding(top = theme.heading.underlinePadding),
+        val numbering = if (config.enableHeadingNumbering) {
+            remember(document, node) { computeHeadingNumber(document.children, node) }
+        } else null
+
+        val finalAnnotated = if (numbering != null) {
+            remember(numbering, annotated) {
+                buildAnnotatedString {
+                    append("$numbering ")
+                    append(annotated)
+                }
+            }
+        } else annotated
+
+        Column {
+            BasicText(
+                text = finalAnnotated,
+                style = style,
+                inlineContent = inlineContents,
             )
+
+            if (node.level <= theme.heading.underlineMaxLevel && theme.heading.underlineThickness.value > 0f) {
+                LocalMarkdownExtensionProvider.current.HorizontalDivider(
+                    style = theme.thematicBreak.copy(
+                        color = theme.heading.underlineColor,
+                        thickness = theme.heading.underlineThickness,
+                    ),
+                    modifier = Modifier.padding(top = theme.heading.underlinePadding),
+                )
+            }
         }
     }
 }
@@ -78,36 +85,43 @@ internal fun SetextHeadingRenderer(
     val config = LocalMarkdownConfig.current
     val level = (node.level - 1).coerceIn(0, theme.headingStyles.lastIndex)
     val style = theme.headingStyles[level]
-    val (annotated, inlineContents) = rememberInlineContent(node, onLinkClick)
+    val document = LocalRendererDocument.current
 
-    val numbering = if (config.enableHeadingNumbering) {
-        val document = LocalRendererDocument.current
-        remember(document, node) { computeHeadingNumberForSetext(document.children, node) }
-    } else null
+    WithInlineContentWidth(modifier = modifier) { maxInlineContentWidth ->
+        val (annotated, inlineContents) = rememberInlineContent(
+            node,
+            onLinkClick,
+            maxInlineContentWidth,
+        )
 
-    val finalAnnotated = if (numbering != null) {
-        remember(numbering, annotated) {
-            buildAnnotatedString {
-                append("$numbering ")
-                append(annotated)
+        val numbering = if (config.enableHeadingNumbering) {
+            remember(document, node) { computeHeadingNumberForSetext(document.children, node) }
+        } else null
+
+        val finalAnnotated = if (numbering != null) {
+            remember(numbering, annotated) {
+                buildAnnotatedString {
+                    append("$numbering ")
+                    append(annotated)
+                }
             }
+        } else annotated
+
+        Column {
+            BasicText(
+                text = finalAnnotated,
+                style = style,
+                inlineContent = inlineContents,
+            )
+
+            LocalMarkdownExtensionProvider.current.HorizontalDivider(
+                style = theme.thematicBreak.copy(
+                    color = theme.heading.underlineColor,
+                    thickness = theme.heading.underlineThickness,
+                ),
+                modifier = Modifier.padding(top = theme.heading.underlinePadding),
+            )
         }
-    } else annotated
-
-    Column(modifier = modifier) {
-        BasicText(
-            text = finalAnnotated,
-            style = style,
-            inlineContent = inlineContents,
-        )
-
-        LocalMarkdownExtensionProvider.current.HorizontalDivider(
-            style = theme.thematicBreak.copy(
-                color = theme.heading.underlineColor,
-                thickness = theme.heading.underlineThickness,
-            ),
-            modifier = Modifier.padding(top = theme.heading.underlinePadding),
-        )
     }
 }
 

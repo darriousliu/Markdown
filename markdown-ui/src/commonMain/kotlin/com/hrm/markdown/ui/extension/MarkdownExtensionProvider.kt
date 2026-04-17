@@ -204,5 +204,11 @@ class InlineExtensionSlot(
     val width: TextUnit,
     val height: TextUnit,
     val verticalAlign: PlaceholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+    val overflowBehavior: InlineExtensionOverflowBehavior = InlineExtensionOverflowBehavior.None,
     val content: @Composable () -> Unit,
 )
+
+enum class InlineExtensionOverflowBehavior {
+    None,
+    HorizontalScroll,
+}

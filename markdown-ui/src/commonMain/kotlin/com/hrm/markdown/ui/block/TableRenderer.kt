@@ -186,9 +186,16 @@ private fun TableCellRenderer(
         return
     }
 
-    val (annotated, inlineContents) = rememberInlineContent(cell, onLinkClick)
+    WithInlineContentWidth(
+        modifier = modifier,
+        contentAlignment = verticalAlignment
+    ) { maxInlineContentWidth ->
+        val (annotated, inlineContents) = rememberInlineContent(
+            cell,
+            onLinkClick,
+            maxInlineContentWidth,
+        )
 
-    Box(modifier = modifier, contentAlignment = verticalAlignment) {
         if (inlineContents.isEmpty()) {
             BasicText(text = annotated, style = style, maxLines = maxLines)
         } else {

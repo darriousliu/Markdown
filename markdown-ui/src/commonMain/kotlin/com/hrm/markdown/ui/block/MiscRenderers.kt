@@ -54,11 +54,16 @@ internal fun DefinitionListRenderer(
         for (child in node.children) {
             when (child) {
                 is DefinitionTerm -> {
-                    val (annotated, _) = rememberInlineContent(child)
-                    BasicText(
-                        text = annotated,
-                        style = theme.definitionListTermTextStyle,
-                    )
+                    WithInlineContentWidth { maxInlineContentWidth ->
+                        val (annotated, _) = rememberInlineContent(
+                            child,
+                            maxInlineContentWidth = maxInlineContentWidth,
+                        )
+                        BasicText(
+                            text = annotated,
+                            style = theme.definitionListTermTextStyle,
+                        )
+                    }
                 }
 
                 is DefinitionDescription -> {

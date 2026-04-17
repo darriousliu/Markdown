@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import com.hrm.markdown.parser.ast.Image
 import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.parser.ast.Paragraph
@@ -17,6 +18,7 @@ import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.MarkdownImageFrame
 import com.hrm.markdown.ui.inline.buildInlineAnnotatedString
 import com.hrm.markdown.ui.inline.rememberInlineContent
+import com.hrm.markdown.ui.inline.rememberInlineExtensionSlots
 import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
@@ -53,14 +55,20 @@ private fun SimpleParagraphRenderer(
 ) {
     val theme = LocalMarkdownTheme.current
     val onLinkClick = LocalOnLinkClick.current
-    val (annotated, inlineContents) = rememberInlineContent(node, onLinkClick)
 
-    BasicText(
-        text = annotated,
-        modifier = modifier,
-        style = theme.bodyStyle,
-        inlineContent = inlineContents,
-    )
+    WithInlineContentWidth(modifier = modifier) { maxInlineContentWidth ->
+        val (annotated, inlineContents) = rememberInlineContent(
+            node,
+            onLinkClick,
+            maxInlineContentWidth,
+        )
+
+        BasicText(
+            text = annotated,
+            style = theme.bodyStyle,
+            inlineContent = inlineContents,
+        )
+    }
 }
 
 /**
@@ -87,59 +95,69 @@ private fun MixedParagraphRenderer(
     val onLinkClick = LocalOnLinkClick.current
     val customRenderer = LocalImageRenderer.current
     val extensionProvider = LocalMarkdownExtensionProvider.current
+    val density = LocalDensity.current
 
     // 将段落子节点拆分为文本段和图片段
     val segments = remember(node) { splitParagraphSegments(node.children) }
 
-    Column(modifier = modifier) {
-        for (segment in segments) {
-            when (segment) {
-                is ParagraphSegment.TextRun -> {
-                    val inlineContents = mutableMapOf<String, InlineTextContent>()
-                    val annotated = buildInlineAnnotatedString(
-                        segment.nodes,
-                        theme,
-                        emptyMap(),
-                        inlineContents,
-                        onLinkClick,
-                    )
-                    if (annotated.isNotEmpty()) {
-                        BasicText(
-                            text = annotated,
-                            modifier = Modifier,
-                            style = theme.bodyStyle,
-                            inlineContent = inlineContents,
+    WithInlineContentWidth(modifier = modifier) { maxInlineContentWidth ->
+        Column {
+            for (segment in segments) {
+                when (segment) {
+                    is ParagraphSegment.TextRun -> {
+                        val inlineContents = mutableMapOf<String, InlineTextContent>()
+                        val extensionSlots = rememberInlineExtensionSlots(
+                            segment.nodes,
+                            theme,
+                            extensionProvider,
                         )
-                    }
-                }
-
-                is ParagraphSegment.ImageItem -> {
-                    val img = segment.image
-                    val altText = img.children.filterIsInstance<Text>()
-                        .joinToString("") { it.literal }
-                    val imageData = MarkdownImageData(
-                        url = img.destination,
-                        altText = altText,
-                        title = img.title,
-                        width = img.imageWidth,
-                        height = img.imageHeight,
-                        attributes = img.attributes,
-                    )
-                    if (customRenderer != null) {
-                        MarkdownImageFrame(
-                            data = imageData,
-                            style = theme.image,
-                            modifier = theme.modifiers.image,
-                        ) {
-                            customRenderer(imageData, Modifier)
+                        val annotated = buildInlineAnnotatedString(
+                            segment.nodes,
+                            theme,
+                            extensionSlots,
+                            inlineContents,
+                            onLinkClick,
+                            maxInlineContentWidth,
+                            density,
+                        )
+                        if (annotated.isNotEmpty()) {
+                            BasicText(
+                                text = annotated,
+                                modifier = Modifier,
+                                style = theme.bodyStyle,
+                                inlineContent = inlineContents,
+                            )
                         }
-                    } else {
-                        extensionProvider.BlockImage(
-                            node = img,
+                    }
+
+                    is ParagraphSegment.ImageItem -> {
+                        val img = segment.image
+                        val altText = img.children.filterIsInstance<Text>()
+                            .joinToString("") { it.literal }
+                        val imageData = MarkdownImageData(
+                            url = img.destination,
                             altText = altText,
-                            style = theme.image,
-                            modifier = theme.modifiers.image,
+                            title = img.title,
+                            width = img.imageWidth,
+                            height = img.imageHeight,
+                            attributes = img.attributes,
                         )
+                        if (customRenderer != null) {
+                            MarkdownImageFrame(
+                                data = imageData,
+                                style = theme.image,
+                                modifier = theme.modifiers.image,
+                            ) {
+                                customRenderer(imageData, Modifier)
+                            }
+                        } else {
+                            extensionProvider.BlockImage(
+                                node = img,
+                                altText = altText,
+                                style = theme.image,
+                                modifier = theme.modifiers.image,
+                            )
+                        }
                     }
                 }
             }
