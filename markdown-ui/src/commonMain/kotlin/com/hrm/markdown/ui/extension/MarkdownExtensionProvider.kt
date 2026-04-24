@@ -3,6 +3,9 @@ package com.hrm.markdown.ui.extension
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import com.hrm.markdown.parser.ast.CustomContainer
 import com.hrm.markdown.parser.ast.DiagramBlock
@@ -163,10 +166,10 @@ interface MarkdownExtensionProvider {
      *
      * 返回 `null` 时 renderer 会使用回退显示（原始 LaTeX 文本）。
      */
-    @Composable
-    fun rememberInlineMathSlot(
+    fun inlineMathSlot(
         node: InlineMath,
         style: MathStyle,
+        context: InlineExtensionContext,
     ): InlineExtensionSlot? = null
 
     /**
@@ -175,18 +178,18 @@ interface MarkdownExtensionProvider {
      * 段落中混有图片的情况，renderer 会自动把独立图片拆分为块级调用 [BlockImage]；
      * 该方法只用于真正嵌入在文本中的小图片。
      */
-    @Composable
-    fun rememberInlineImageSlot(
+    fun inlineImageSlot(
         node: Image,
         altText: String,
         style: ImageStyle,
+        context: InlineExtensionContext,
     ): InlineExtensionSlot? = null
 
     /** 为行内 shortcode 提供 InlineContent 槽位。 */
-    @Composable
-    fun rememberInlineShortcodeSlot(
+    fun inlineShortcodeSlot(
         node: ShortcodeInline,
         theme: MarkdownTheme,
+        context: InlineExtensionContext,
     ): InlineExtensionSlot? = null
 
     /** 没有任何扩展实现的 provider，全部使用默认 fallback。 */
@@ -212,3 +215,10 @@ enum class InlineExtensionOverflowBehavior {
     None,
     HorizontalScroll,
 }
+
+class InlineExtensionContext(
+    val density: Density,
+    val layoutDirection: LayoutDirection,
+    val textMeasurer: TextMeasurer,
+    val maxInlineContentWidth: TextUnit? = null,
+)

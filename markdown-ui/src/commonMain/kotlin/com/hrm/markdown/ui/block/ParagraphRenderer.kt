@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.rememberTextMeasurer
 import com.hrm.markdown.parser.ast.Image
 import com.hrm.markdown.parser.ast.Node
 import com.hrm.markdown.parser.ast.Paragraph
@@ -16,9 +18,10 @@ import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
 import com.hrm.markdown.ui.LocalOnLinkClick
 import com.hrm.markdown.ui.MarkdownImageData
 import com.hrm.markdown.ui.MarkdownImageFrame
+import com.hrm.markdown.ui.extension.InlineExtensionContext
 import com.hrm.markdown.ui.inline.buildInlineAnnotatedString
+import com.hrm.markdown.ui.inline.buildInlineExtensionSlots
 import com.hrm.markdown.ui.inline.rememberInlineContent
-import com.hrm.markdown.ui.inline.rememberInlineExtensionSlots
 import com.hrm.markdown.ui.theme.LocalMarkdownTheme
 
 /**
@@ -96,21 +99,44 @@ private fun MixedParagraphRenderer(
     val customRenderer = LocalImageRenderer.current
     val extensionProvider = LocalMarkdownExtensionProvider.current
     val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
+    val textMeasurer = rememberTextMeasurer()
 
     // 将段落子节点拆分为文本段和图片段
     val segments = remember(node) { splitParagraphSegments(node.children) }
 
     WithInlineContentWidth(modifier = modifier) { maxInlineContentWidth ->
+        val extensionContext = remember(
+            density,
+            layoutDirection,
+            textMeasurer,
+            maxInlineContentWidth,
+        ) {
+            InlineExtensionContext(
+                density = density,
+                layoutDirection = layoutDirection,
+                textMeasurer = textMeasurer,
+                maxInlineContentWidth = maxInlineContentWidth,
+            )
+        }
         Column {
             for (segment in segments) {
                 when (segment) {
                     is ParagraphSegment.TextRun -> {
                         val inlineContents = mutableMapOf<String, InlineTextContent>()
-                        val extensionSlots = rememberInlineExtensionSlots(
+                        val extensionSlots = remember(
                             segment.nodes,
                             theme,
                             extensionProvider,
-                        )
+                            extensionContext,
+                        ) {
+                            buildInlineExtensionSlots(
+                                segment.nodes,
+                                theme,
+                                extensionProvider,
+                                extensionContext,
+                            )
+                        }
                         val annotated = buildInlineAnnotatedString(
                             segment.nodes,
                             theme,
@@ -119,6 +145,8 @@ private fun MixedParagraphRenderer(
                             onLinkClick,
                             maxInlineContentWidth,
                             density,
+                            layoutDirection,
+                            textMeasurer,
                         )
                         if (annotated.isNotEmpty()) {
                             BasicText(

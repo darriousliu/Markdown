@@ -37,6 +37,7 @@ import com.hrm.markdown.ui.theme.ProvideMarkdownTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val TAG_RENDER = "MarkdownRender"
 
@@ -248,7 +249,7 @@ private fun InnerMarkdown(
     onLinkClick: ((String) -> Unit)? = null,
 ) {
     val latestDocument by rememberUpdatedState(document)
-    var throttledDocument by remember { mutableStateOf(document) }
+    var throttledDocument by remember { mutableStateOf(document, neverEqualPolicy()) }
 
     LaunchedEffect(isStreaming) {
         if (!isStreaming) {
@@ -258,7 +259,7 @@ private fun InnerMarkdown(
 
         while (true) {
             withFrameNanos { }
-            delay(16L)
+            delay(16L.milliseconds)
             throttledDocument = latestDocument
         }
     }
@@ -274,16 +275,11 @@ private fun InnerMarkdown(
     val newChildren = renderDocument.children
     val newFiltered = newChildren.filter { it !is BlankLine }
     val currentList = blockNodesState.value
-    val nextBlockNodes = reconcileBlockNodes(
-        current = currentList,
-        incoming = newFiltered,
-        isStreaming = isStreaming,
-    )
-    if (!structurallyEqual(currentList, nextBlockNodes)) {
+    if (isStreaming || !structurallyEqual(currentList, newFiltered)) {
         HLog.d(TAG_RENDER) {
-            "blockNodes updated: ${currentList.size} -> ${nextBlockNodes.size}"
+            "blockNodes updated: ${currentList.size} -> ${newFiltered.size}"
         }
-        blockNodesState.value = nextBlockNodes
+        blockNodesState.value = newFiltered.toList()
     }
 
     // P1: 分页加载支持 - 渐进式渲染超长文档
@@ -407,52 +403,4 @@ private fun structurallyEqual(a: List<Node>, b: List<Node>): Boolean {
         if (a[i] !== b[i]) return false
     }
     return true
-}
-
-/**
- * 在流式场景下，尽量复用未变化前缀块的旧实例，避免 Compose 把前面的段落视为全新节点。
- *
- * 这里刻意保守：
- * - 只按顺序复用公共前缀；
- * - 仅当前后节点的类型、行范围、contentHash 都一致时才复用；
- * - 流式模式下最后一个块通常仍在增长，始终保留新实例。
- */
-private fun reconcileBlockNodes(
-    current: List<Node>,
-    incoming: List<Node>,
-    isStreaming: Boolean,
-): List<Node> {
-    if (current.isEmpty() || incoming.isEmpty()) return incoming.toList()
-
-    val result = ArrayList<Node>(incoming.size)
-    val reusablePrefixEndExclusive = if (isStreaming) {
-        incoming.lastIndex.coerceAtLeast(0)
-    } else {
-        incoming.size
-    }
-
-    var prefixStillReusable = true
-    for (index in incoming.indices) {
-        val incomingNode = incoming[index]
-        val currentNode = current.getOrNull(index)
-        val shouldReuse = prefixStillReusable &&
-                index < reusablePrefixEndExclusive &&
-                currentNode != null &&
-                canReuseBlockNode(currentNode, incomingNode)
-
-        if (shouldReuse) {
-            result += currentNode
-        } else {
-            prefixStillReusable = false
-            result += incomingNode
-        }
-    }
-
-    return result
-}
-
-private fun canReuseBlockNode(current: Node, incoming: Node): Boolean {
-    return current::class == incoming::class &&
-            current.lineRange == incoming.lineRange &&
-            current.contentHash == incoming.contentHash
 }

@@ -78,6 +78,7 @@ import com.hrm.markdown.parser.ast.Superscript
 import com.hrm.markdown.parser.ast.Text
 import com.hrm.markdown.parser.ast.WikiLink
 import com.hrm.markdown.ui.LocalMarkdownExtensionProvider
+import com.hrm.markdown.ui.extension.InlineExtensionContext
 import com.hrm.markdown.ui.extension.InlineExtensionOverflowBehavior
 import com.hrm.markdown.ui.extension.InlineExtensionSlot
 import com.hrm.markdown.ui.extension.MarkdownExtensionProvider
@@ -103,19 +104,37 @@ internal fun rememberInlineContent(
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
     val textMeasurer = rememberTextMeasurer()
-    val extensionSlots = rememberInlineExtensionSlots(parent.children, theme, extensionProvider)
+    val extensionContext = remember(
+        density,
+        layoutDirection,
+        textMeasurer,
+        maxInlineContentWidth,
+    ) {
+        InlineExtensionContext(
+            density = density,
+            layoutDirection = layoutDirection,
+            textMeasurer = textMeasurer,
+            maxInlineContentWidth = maxInlineContentWidth,
+        )
+    }
 
     return remember(
         parent,
         theme,
         extensionProvider,
-        extensionSlots,
+        extensionContext,
         onLinkClick,
         maxInlineContentWidth,
         density,
         layoutDirection,
         textMeasurer
     ) {
+        val extensionSlots = buildInlineExtensionSlots(
+            nodes = parent.children,
+            theme = theme,
+            provider = extensionProvider,
+            context = extensionContext,
+        )
         val inlineContents = mutableMapOf<String, InlineTextContent>()
         val annotated = buildAnnotatedString {
             renderInlineChildren(
@@ -134,39 +153,39 @@ internal fun rememberInlineContent(
     }
 }
 
-@Composable
-internal fun rememberInlineExtensionSlots(
+internal fun buildInlineExtensionSlots(
     nodes: List<Node>,
     theme: MarkdownTheme,
     provider: MarkdownExtensionProvider,
+    context: InlineExtensionContext,
 ): Map<Node, InlineExtensionSlot> {
     val slots = LinkedHashMap<Node, InlineExtensionSlot>()
-    collectInlineExtensionSlots(nodes, theme, provider, slots)
+    collectInlineExtensionSlots(nodes, theme, provider, context, slots)
     return slots
 }
 
-@Composable
 private fun collectInlineExtensionSlots(
     nodes: List<Node>,
     theme: MarkdownTheme,
     provider: MarkdownExtensionProvider,
+    context: InlineExtensionContext,
     slots: MutableMap<Node, InlineExtensionSlot>,
 ) {
     for (node in nodes) {
         when (node) {
-            is InlineMath -> provider.rememberInlineMathSlot(node, theme.math)
+            is InlineMath -> provider.inlineMathSlot(node, theme.math, context)
                 ?.let { slots[node] = it }
 
             is Image -> {
                 val altText = node.children.filterIsInstance<Text>().joinToString("") { it.literal }
-                provider.rememberInlineImageSlot(node, altText, theme.image)
+                provider.inlineImageSlot(node, altText, theme.image, context)
                     ?.let { slots[node] = it }
             }
 
-            is ShortcodeInline -> provider.rememberInlineShortcodeSlot(node, theme)
+            is ShortcodeInline -> provider.inlineShortcodeSlot(node, theme, context)
                 ?.let { slots[node] = it }
 
-            is ContainerNode -> collectInlineExtensionSlots(node.children, theme, provider, slots)
+            is ContainerNode -> collectInlineExtensionSlots(node.children, theme, provider, context, slots)
             else -> Unit
         }
     }
@@ -1015,7 +1034,6 @@ private fun SpoilerContent(
                         null,
                         null,
                         null,
-                        null
                     )
                 }
             } else {
@@ -1034,7 +1052,6 @@ private fun SpoilerContent(
                         null,
                         null,
                         null,
-                        null
                     )
                 }
             }
